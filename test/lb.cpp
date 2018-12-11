@@ -90,7 +90,11 @@ namespace swlb {
     void printWindow() {
       for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
         for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
-          int ind = (readInd + NumImageCols*rowOffset + colOffset) % LB_SIZE;
+          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+          // if (rawInd >= LB_SIZE) {
+          //   cout << "rawInd = " << rawInd << endl;
+          // }
+          int ind = rawInd % LB_SIZE;
           cout << buf[ind] << " ";
         }
 
@@ -133,6 +137,13 @@ namespace swlb {
     cout << "Linebuffer window" << endl;
     lb.printWindow();
 
+    lb.pop();
+    val++;
+    lb.write(val);
+
+    cout << "Linebuffer window" << endl;
+    lb.printWindow();
+    
   }
 
 }
