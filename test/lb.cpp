@@ -131,7 +131,8 @@ namespace swlb {
     lb.printWindow();
 
     lb.pop();
-    val++;
+
+    //val++;
     lb.write(val);
 
     cout << "Linebuffer window" << endl;
