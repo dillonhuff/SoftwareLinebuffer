@@ -33,10 +33,16 @@ namespace swlb {
     CircularFIFO() {
       writeInd = 0;
       readInd = 0;
-      empty = false;
+      empty = true;
+    }
+
+    bool full() {
+      return !empty && (writeInd == readInd);
     }
 
     void write(const ElemType tp) {
+      assert(!full());
+
       buf[writeInd] = tp;
       writeInd = modInc(writeInd, size);
       empty = false;
@@ -62,7 +68,7 @@ namespace swlb {
   template<typename ElemType, int WindowRows, int WindowCols, int NumImageCols>
   class LineBuffer {
 
-    const static int LB_SIZE = (WindowRows - 1)*NumImageCols + WindowCols;
+    const static int LB_SIZE = (WindowRows - 1)*NumImageCols + (WindowCols / 2) + WindowCols;
     
     ElemType buf[LB_SIZE];
     int writeInd;
@@ -93,7 +99,12 @@ namespace swlb {
     }
 
     void pop() {
-      readInd = (readInd + 1) % LB_SIZE;
+      // If we are at the end of a row, shift to the next row
+      if ((((readInd + (WindowCols / 2))) % WindowCols) == 0) {
+        readInd = (readInd + 2*(WindowCols / 2)) % LB_SIZE;
+      } else {
+        readInd = (readInd + 1) % LB_SIZE;
+      }
       if (readInd == writeInd) {
         empty = true;
       }
@@ -202,6 +213,7 @@ namespace swlb {
     assert(lb.read(0, 1) == 13);
     
     cout << "--------------" << endl;
+    int numWrites = 0;
     while (!input.isEmpty()) {
       int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
         kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
@@ -215,7 +227,17 @@ namespace swlb {
         kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
         kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
 
-      lbOutput.write(top + mid + low);
+      cout << "top = " << top << endl;
+      cout << "mid = " << mid << endl;
+      cout << "low = " << low << endl;
+      cout << "---------" << endl;
+
+      int total = top + mid + low;
+      cout << "Writing " << total << " to output" << endl;
+      lbOutput.write(total);
+      numWrites++;
+
+      cout << "Write number = " << numWrites << endl;
 
       lb.pop();
       lb.write(input.read());
@@ -261,7 +283,11 @@ namespace swlb {
         int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + (j - 1)] +
           kernel[2*KERNEL_WIDTH + 1]*input[(i + 1)*NCOLS + j] +
           kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + (j + 1)];
-        
+
+        cout << "top = " << top << endl;
+        cout << "mid = " << mid << endl;
+        cout << "low = " << low << endl;
+        cout << "---------" << endl;
         correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
           top + mid + low;
       }
