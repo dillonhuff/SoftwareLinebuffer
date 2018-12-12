@@ -106,6 +106,12 @@ namespace swlb {
       return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
     }
 
+    void printBuffer() {
+      for (int i = 0; i < LB_SIZE; i++) {
+        cout << buf[i] << " ";
+      }
+    }
+
     void printWindow() {
       for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
         for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
@@ -179,19 +185,21 @@ namespace swlb {
     LineBuffer<int, 3, 3, NCOLS> lb;
     
     while (!lb.full()) {
+      cout << "Writing " << input.read() << " to linebuffer" << endl;
       lb.write(input.read());
       input.pop();
     }
 
     lb.printWindow();
+    lb.printBuffer();
 
     assert(lb.read(-1, -1) == 1);
     assert(lb.read(-1, 0) == 2);
     assert(lb.read(-1, 1) == 3);    
 
-    assert(lb.read(0, -1) == 1);
-    assert(lb.read(0, 0) == 2);
-    assert(lb.read(0, 1) == 3);    
+    assert(lb.read(0, -1) == 11);
+    assert(lb.read(0, 0) == 12);
+    assert(lb.read(0, 1) == 13);
     
     cout << "--------------" << endl;
     while (!input.isEmpty()) {
@@ -268,8 +276,8 @@ namespace swlb {
     }
 
     CircularFIFO<int, NROWS*NCOLS> inputBuf;
-    for (int i = 0; i < OUT_ROWS; i++) {
-      for (int j = 0; j < OUT_COLS; j++) {
+    for (int i = 0; i < NROWS; i++) {
+      for (int j = 0; j < NCOLS; j++) {
         inputBuf.write(input[i*NCOLS + j]);
       }
     }
