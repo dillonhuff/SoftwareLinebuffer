@@ -95,6 +95,7 @@ namespace swlb {
 
       empty = false;
       buf[writeInd] = t;
+
       writeInd = modInc(writeInd, LB_SIZE);
     }
 
