@@ -25,25 +25,37 @@ namespace swlb {
     ElemType buf[size];
     int writeInd;
     int readInd;
+
+    bool empty;
     
   public:
 
     CircularFIFO() {
       writeInd = 0;
       readInd = 0;
+      empty = false;
     }
 
     void write(const ElemType tp) {
       buf[writeInd] = tp;
       writeInd = modInc(writeInd, size);
+      empty = false;
     }
 
     ElemType read() {
       return buf[readInd];
     }
 
+    bool isEmpty() const {
+      return empty;
+    }
+
     void pop() {
       readInd = modInc(readInd, size);
+
+      if (writeInd == readInd) {
+        empty = true;
+      }
     }
   };
 
@@ -85,6 +97,13 @@ namespace swlb {
       if (readInd == writeInd) {
         empty = true;
       }
+    }
+
+    ElemType read(const int rowOffset, const int colOffset) {
+      assert(rowOffset <= (WindowRows / 2));
+      assert(colOffset <= (WindowCols / 2));
+
+      return buf[(readInd + NumImageCols*(rowOffset + WindowRows) + (colOffset + WindowCols)) % LB_SIZE];
     }
 
     void printWindow() {
@@ -145,15 +164,54 @@ namespace swlb {
     
   }
 
-  TEST_CASE("Using linebuffer for convolution") {
 
-    const int KERNEL_WIDTH = 3;
+  const int KERNEL_WIDTH = 3;
     
-    const int NROWS = 8;
-    const int NCOLS = 10;
+  const int NROWS = 8;
+  const int NCOLS = 10;
+  
+  const int OUT_ROWS = NROWS - 2;    
+  const int OUT_COLS = NCOLS - 2;
+  
+  void lineBufferConv3x3(CircularFIFO<int, NROWS*NCOLS>& input,
+                         const vector<int>& kernel,
+                         CircularFIFO<int, OUT_ROWS*OUT_COLS>& lbOutput) {
+    LineBuffer<int, 3, 3, NCOLS> lb;
+    int i = 0;
+    int j = 0;
+    
+    while (!lb.full()) {
+      lb.write(input.read());
+      input.pop();
+    }
 
-    const int OUT_ROWS = NROWS - 2;    
-    const int OUT_COLS = NCOLS - 2;
+    lb.printWindow();
+
+    while (!input.isEmpty()) {
+      int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
+        kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
+        kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
+
+      int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
+        kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
+        kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
+
+      int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
+        kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
+        kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
+      
+      lbOutput.write(top + mid + low);
+
+      lb.pop();
+      lb.write(input.read());
+
+      lb.printWindow();
+
+      input.pop();
+    }
+  }
+  
+  TEST_CASE("Using linebuffer for convolution") {
 
     vector<int> input;
     int val = 1;
@@ -200,6 +258,26 @@ namespace swlb {
       }
       cout << endl;
     }
+
+    CircularFIFO<int, NROWS*NCOLS> inputBuf;
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        inputBuf.write(input[i*NCOLS + j]);
+      }
+    }
+
+    CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
+    lineBufferConv3x3(inputBuf, kernel, lbOutput);
+
+    cout << "LB output" << endl;
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        cout << lbOutput.read() << " ";
+        lbOutput.pop();
+      }
+      cout << endl;
+    }
+
   }
 
 }
