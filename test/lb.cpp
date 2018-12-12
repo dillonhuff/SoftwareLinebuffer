@@ -185,6 +185,14 @@ namespace swlb {
 
     lb.printWindow();
 
+    assert(lb.read(-1, -1) == 1);
+    assert(lb.read(-1, 0) == 2);
+    assert(lb.read(-1, 1) == 3);    
+
+    assert(lb.read(0, -1) == 1);
+    assert(lb.read(0, 0) == 2);
+    assert(lb.read(0, 1) == 3);    
+    
     cout << "--------------" << endl;
     while (!input.isEmpty()) {
       int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
@@ -198,7 +206,7 @@ namespace swlb {
       int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
         kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
         kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
-      
+
       lbOutput.write(top + mid + low);
 
       lb.pop();
@@ -234,17 +242,17 @@ namespace swlb {
 
     for (int i = 1; i < NROWS - 1; i++) {
       for (int j = 1; j < NCOLS - 1; j++) {
-        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j] +
+        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + (j - 1)] +
           kernel[0*KERNEL_WIDTH + 1]*input[(i - 1)*NCOLS + j] +
-          kernel[0*KERNEL_WIDTH + 2]*input[(i - 1)*NCOLS + j];
+          kernel[0*KERNEL_WIDTH + 2]*input[(i - 1)*NCOLS + (j + 1)];
 
-        int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + j] +
-          kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + j] +
-          kernel[1*KERNEL_WIDTH + 2]*input[(i)*NCOLS + j];
+        int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + (j - 1)] +
+          kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + (j)] +
+          kernel[1*KERNEL_WIDTH + 2]*input[(i)*NCOLS + (j + 1)];
 
-        int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + j] +
+        int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + (j - 1)] +
           kernel[2*KERNEL_WIDTH + 1]*input[(i + 1)*NCOLS + j] +
-          kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + j];
+          kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + (j + 1)];
         
         correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
           top + mid + low;
