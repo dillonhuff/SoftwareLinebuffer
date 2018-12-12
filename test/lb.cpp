@@ -172,10 +172,33 @@ namespace swlb {
     }
 
     vector<int> correctOutput;
+    correctOutput.resize(OUT_ROWS*OUT_COLS);
+
     for (int i = 1; i < NROWS - 1; i++) {
       for (int j = 1; j < NCOLS - 1; j++) {
-        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j];
+        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j] +
+          kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j] +
+          kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j];
+
+        int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + j] +
+          kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + j] +
+          kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + j];
+
+        int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + j] +
+          kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + j] +
+          kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + j];
+        
+        correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
+          top + mid + low;
       }
+    }
+
+    cout << "Correct output" << endl;
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        cout << correctOutput[i*OUT_COLS + j] << " ";
+      }
+      cout << endl;
     }
   }
 
