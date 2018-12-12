@@ -91,9 +91,6 @@ namespace swlb {
       for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
         for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
           int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
-          // if (rawInd >= LB_SIZE) {
-          //   cout << "rawInd = " << rawInd << endl;
-          // }
           int ind = rawInd % LB_SIZE;
           cout << buf[ind] << " ";
         }
@@ -132,19 +129,54 @@ namespace swlb {
 
     lb.pop();
 
-    //val++;
     lb.write(val);
-
+    val++;
+    
     cout << "Linebuffer window" << endl;
     lb.printWindow();
 
     lb.pop();
-    val++;
+
     lb.write(val);
+    val++;
 
     cout << "Linebuffer window" << endl;
     lb.printWindow();
     
+  }
+
+  TEST_CASE("Using linebuffer for convolution") {
+
+    const int KERNEL_WIDTH = 3;
+    
+    const int NROWS = 8;
+    const int NCOLS = 10;
+
+    const int OUT_ROWS = NROWS - 2;    
+    const int OUT_COLS = NCOLS - 2;
+
+    vector<int> input;
+    int val = 1;
+    for (int i = 0; i < NROWS; i++) {
+      for (int j = 0; j < NCOLS; j++) {
+        input.push_back(val);
+        val++;
+      }
+    }
+
+    vector<int> kernel;
+    for (int i = 0; i < KERNEL_WIDTH; i++) {
+      for (int j = 0; j < KERNEL_WIDTH; j++) {
+        kernel.push_back(i + j);
+      }
+    }
+
+    vector<int> correctOutput;
+    for (int i = 1; i < NROWS - 1; i++) {
+      for (int j = 1; j < NCOLS - 1; j++) {
+        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + j];
+      }
+    }
   }
 
 }
