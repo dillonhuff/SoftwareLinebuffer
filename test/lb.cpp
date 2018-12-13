@@ -671,13 +671,13 @@ namespace swlb {
           kernel(0, 1)*input[(i - 1)*NCOLS + j] +
           kernel(0, 2)*input[(i - 1)*NCOLS + (j + 1)];
 
-        int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + (j - 1)] +
-          kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + (j)] +
-          kernel[1*KERNEL_WIDTH + 2]*input[(i)*NCOLS + (j + 1)];
+        int mid = kernel(1, 0)*input[(i)*NCOLS + (j - 1)] +
+          kernel(1, 1)*input[(i)*NCOLS + (j)] +
+          kernel(1, 2)*input[(i)*NCOLS + (j + 1)];
 
-        int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + (j - 1)] +
-          kernel[2*KERNEL_WIDTH + 1]*input[(i + 1)*NCOLS + j] +
-          kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + (j + 1)];
+        int low = kernel(2, 0)*input[(i + 1)*NCOLS + (j - 1)] +
+          kernel(2, 1)*input[(i + 1)*NCOLS + j] +
+          kernel(2, 2)*input[(i + 1)*NCOLS + (j + 1)];
 
         cout << "top = " << top << endl;
         cout << "mid = " << mid << endl;
