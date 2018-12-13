@@ -227,10 +227,10 @@ namespace swlb {
     const static int WINDOW_ROW_MARGIN = (WindowRows / 2);
 
     const static int OUTPUT_LEFT_BOUND = WINDOW_COL_MARGIN;
-    const static int OUTPUT_RIGHT_BOUND = (WindowCols - WINDOW_COL_MARGIN) - 1;
+    const static int OUTPUT_RIGHT_BOUND = (NumImageCols - WINDOW_COL_MARGIN) - 1;
 
     const static int OUTPUT_TOP_BOUND = WINDOW_ROW_MARGIN;
-    const static int OUTPUT_BOTTOM_BOUND = (WindowRows - WINDOW_ROW_MARGIN) - 1;
+    const static int OUTPUT_BOTTOM_BOUND = (NumImageRows - WINDOW_ROW_MARGIN) - 1;
 
     const static int LB_SIZE = (WindowRows - 1)*NumImageCols + WINDOW_COL_MARGIN + WindowCols;
     
@@ -307,18 +307,21 @@ namespace swlb {
       return (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
     }
 
-    bool windowValid() const {
+    bool nextReadInBounds() const {
       PixelLoc center = nextReadCenter();
 
-      bool nextReadInBounds =
+      bool inBounds =
         (OUTPUT_LEFT_BOUND <= center.col) &&
         (center.col <= OUTPUT_RIGHT_BOUND) &&
         (OUTPUT_TOP_BOUND <= center.row) &&
         (center.row <= OUTPUT_BOTTOM_BOUND);
 
-      return nextReadInBounds &&
-        windowFull();
+      return inBounds;
+    }
+    bool windowValid() const {
 
+      return nextReadInBounds() &&
+        windowFull();
     }
 
     void pop() {
@@ -383,6 +386,82 @@ namespace swlb {
 
     REQUIRE(lb.windowValid());
   }
+
+  TEST_CASE("After loading enough rows and popping the imagebuffer center has shifted") {
+    ImageBuffer<int, 3, 3, 10, 10> lb;
+    for (int i = 0; i < 10*2 + 3; i++) {
+      REQUIRE(!lb.windowValid());
+      lb.write(i);
+    }
+
+    REQUIRE(lb.windowFull());    
+    REQUIRE(lb.nextReadInBounds());    
+    lb.pop();
+
+    REQUIRE(lb.nextReadCenter() == PixelLoc(1, 2));
+
+    lb.write(23);
+
+    REQUIRE(lb.windowFull());    
+    REQUIRE(lb.nextReadInBounds());    
+
+    REQUIRE(lb.windowValid());
+  }
+
+  // TEST_CASE("Loading values in sequence into imagebuffer") {
+
+  //   const int NROWS = 8;    
+  //   const int NCOLS = 10;
+
+  //   Mem2D<int, NROWS, NCOLS> mem;
+  //   int val = 1;
+  //   for (int i = 0; i < 8; i++) {
+  //     for (int j = 0; j < 10; j++) {
+  //       mem.set(i, j, val);
+  //       val++;
+  //     }
+  //   }
+
+  //   ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
+
+  //   int rowInd = 0;
+  //   int colInd = 0;
+
+  //   // Startup: Fill the linebuffer
+  //   while (!lb.windowValid()) {
+  //     lb.write(mem(rowInd, colInd));
+  //     colInd = (colInd + 1) % NCOLS;
+  //     if (colInd == 0) {
+  //       rowInd++;
+  //     }
+  //   }
+
+  //   while ((rowInd < NROWS) && (colInd < NCOLS)) {
+
+  //     if (lb.windowValid()) {
+  //       cout << "valid ";
+  //     } else {
+  //       cout << "INVALID ";
+  //     }
+  //     cout << "window" << endl;
+  //     lb.printWindow();
+
+  //     lb.pop();
+
+  //     lb.write(mem(rowInd, colInd));
+
+  //     colInd = (colInd + 1) % NCOLS;
+  //     if (colInd == 0) {
+  //       rowInd++;
+  //     }
+      
+  //   }
+
+  //   lb.printWindow();
+
+  //   REQUIRE(false);
+      
+  // }
   
   TEST_CASE("Circular buffer") {
     CircularFIFO<int, 100> cb;
@@ -531,65 +610,6 @@ namespace swlb {
   //   REQUIRE(!lb.windowValid());
   // }
 
-  // TEST_CASE("Loading values in sequence") {
-
-  //   const int NCOLS = 10;
-
-  //   Mem2D<int, 8, NCOLS> mem;
-  //   int val = 1;
-  //   for (int i = 0; i < 8; i++) {
-  //     for (int j = 0; j < 10; j++) {
-  //       mem.set(i, j, val);
-  //       val++;
-  //     }
-  //   }
-
-  //   LineBuffer<int, 3, 3, 10> lb;
-
-  //   int rowInd = 0;
-  //   int colInd = 0;
-
-  //   // Startup: Fill the linebuffer
-  //   while (!lb.windowValid()) {
-  //     lb.write(mem(rowInd, colInd));
-  //     colInd = (colInd + 1) % NCOLS;
-  //     if (colInd == 0) {
-  //       rowInd++;
-  //     }
-  //   }
-
-  //   while ((rowInd < NROWS) && (colInd < NCOLS)) {
-
-  //     if (lb.windowValid()) {
-  //       cout << "valid ";
-  //     } else {
-  //       cout << "INVALID ";
-  //     }
-  //     cout << "window" << endl;
-  //     lb.printWindow();
-
-  //     lb.pop();
-
-  //     lb.write(mem(rowInd, colInd));
-
-  //     colInd = (colInd + 1) % NCOLS;
-  //     if (colInd == 0) {
-  //       rowInd++;
-  //     }
-      
-  //   }
-
-  //   // for (int i = 0; i < 11; i++) {
-  //   //   lb.pop();
-  //   //   lb.write(in);
-  //   //   in++;
-  //   // }
-
-  //   lb.printWindow();
-
-  //   REQUIRE(false);
-      
-  // }
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
     LineBuffer<int, 3, 3, 10> lb;
