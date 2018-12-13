@@ -107,6 +107,28 @@ namespace swlb {
       return (readInd % NumImageCols) < (WindowCols / 2);
     }
 
+    int numValidEntries() const {
+      if (empty) {
+        return 0;
+      }
+
+      if (readInd < writeInd) {
+        return writeInd - readInd;
+      }
+
+      if (readInd == writeInd) {
+        return LB_SIZE;
+      }
+
+      // readInd > writeInd
+      return (LB_SIZE - readInd) + writeInd;
+    }
+
+    bool windowValid() const {
+      int nValid = numValidEntries();
+      return nValid >= ((WindowRows - 1)*NumImageCols + WindowCols);
+    }
+
     bool inEndMargin() {
       int rc = WindowCols / 2;
       cout << "rc = " << rc << endl;
@@ -285,6 +307,27 @@ namespace swlb {
   TEST_CASE("On startup linebuffer read is not at EOL") {
     LineBuffer<int, 3, 3, 10> lb;
     REQUIRE(!lb.inEndMargin());
+  }
+
+  TEST_CASE("On startup linebuffer window is not valid") {
+    LineBuffer<int, 3, 3, 10> lb;
+    REQUIRE(!lb.windowValid());
+  }
+
+  TEST_CASE("After loading 23 elements the buffer is valid for the first time") {
+    LineBuffer<int, 3, 3, 10> lb;
+    REQUIRE(!lb.windowValid());
+
+    for (int i = 0; i < 23; i++) {
+      REQUIRE(!lb.windowValid());
+      lb.write(i);
+    }
+
+    REQUIRE(lb.windowValid());
+
+    lb.pop();
+
+    REQUIRE(!lb.windowValid());
   }
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
