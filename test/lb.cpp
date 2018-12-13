@@ -30,6 +30,10 @@ namespace swlb {
       
     }
 
+    int size() const {
+      return NumRows*NumCols;
+    }
+
     ElemType operator()(const int r, const int c) const {
       return elems[r*NumCols + c];
     }
@@ -559,6 +563,36 @@ namespace swlb {
   const int OUT_COLS = NCOLS - 2;
 
   template<typename ElemType, int NumKernelRows, int NumKernelCols, int NumImageRows, int NumImageCols>
+  void bulkConv(const Mem2D<ElemType, NumImageRows, NumImageCols>& input,
+                const Mem2D<ElemType, NumKernelRows, NumKernelCols>& kernel,
+                Mem2D<ElemType, NumImageRows - 2*(NumKernelRows / 2), NumImageCols - 2*(NumKernelCols / 2) >& output) {
+
+    for (int i = 1; i < NROWS - 1; i++) {
+      for (int j = 1; j < NCOLS - 1; j++) {
+
+        int top = kernel(0, 0)*input((i - 1), (j - 1)) +
+          kernel(0, 1)*input((i - 1), j) +
+          kernel(0, 2)*input((i - 1), (j + 1));
+
+        int mid = kernel(1, 0)*input((i), (j - 1)) +
+          kernel(1, 1)*input((i), (j)) +
+          kernel(1, 2)*input((i), (j + 1));
+
+        int low = kernel(2, 0)*input((i + 1), (j - 1)) +
+          kernel(2, 1)*input((i + 1), j) +
+          kernel(2, 2)*input((i + 1), (j + 1));
+
+        cout << "top = " << top << endl;
+        cout << "mid = " << mid << endl;
+        cout << "low = " << low << endl;
+        cout << "---------" << endl;
+
+        output.set(i - 1, j - 1, top + mid + low);
+      }
+    }
+  }
+  
+  template<typename ElemType, int NumKernelRows, int NumKernelCols, int NumImageRows, int NumImageCols>
   void lineBufferConv(CircularFIFO<ElemType, NumImageRows*NumImageCols>& input,
                       const Mem2D<ElemType, NumKernelRows, NumKernelCols>& kernel,
                       CircularFIFO<ElemType, (NumImageRows - 2*((NumKernelRows)/2))*(NumImageCols - 2*((NumKernelCols)/2)) >& lbOutput) {
@@ -609,14 +643,26 @@ namespace swlb {
     
     REQUIRE(lb.inEndMargin());
   }
+
+  template<typename ElemType, int NumRows, int NumCols>
+  void fill(CircularFIFO<ElemType, NumRows*NumCols>& buf,
+            const Mem2D<ElemType, NumRows, NumCols>& mem) {
+    for (int i = 0; i < NumRows; i++) {
+      for (int j = 0; j < NumCols; j++) {
+        buf.write(mem(i, j));
+      }
+    }
+  }
   
   TEST_CASE("Using linebuffer for convolution") {
 
-    vector<int> input;
+    Mem2D<int, NROWS, NCOLS> input;
+    //vector<int> input;
     int val = 1;
     for (int i = 0; i < NROWS; i++) {
       for (int j = 0; j < NCOLS; j++) {
-        input.push_back(val);
+        //input.push_back(val);
+        input.set(i, j, val);
         val++;
       }
     }
@@ -628,46 +674,52 @@ namespace swlb {
       }
     }
 
-    vector<int> correctOutput;
-    correctOutput.resize(OUT_ROWS*OUT_COLS);
+    Mem2D<int, OUT_ROWS, OUT_COLS> correctOutput;
+    bulkConv<int, KERNEL_WIDTH, KERNEL_WIDTH, NROWS, NCOLS>(input, kernel, correctOutput);
 
-    for (int i = 1; i < NROWS - 1; i++) {
-      for (int j = 1; j < NCOLS - 1; j++) {
-        int top = kernel(0, 0)*input[(i - 1)*NCOLS + (j - 1)] +
-          kernel(0, 1)*input[(i - 1)*NCOLS + j] +
-          kernel(0, 2)*input[(i - 1)*NCOLS + (j + 1)];
+    // vector<int> correctOutput;
+    // correctOutput.resize(OUT_ROWS*OUT_COLS);
 
-        int mid = kernel(1, 0)*input[(i)*NCOLS + (j - 1)] +
-          kernel(1, 1)*input[(i)*NCOLS + (j)] +
-          kernel(1, 2)*input[(i)*NCOLS + (j + 1)];
+    // for (int i = 1; i < NROWS - 1; i++) {
+    //   for (int j = 1; j < NCOLS - 1; j++) {
+    //     int top = kernel(0, 0)*input[(i - 1)*NCOLS + (j - 1)] +
+    //       kernel(0, 1)*input[(i - 1)*NCOLS + j] +
+    //       kernel(0, 2)*input[(i - 1)*NCOLS + (j + 1)];
 
-        int low = kernel(2, 0)*input[(i + 1)*NCOLS + (j - 1)] +
-          kernel(2, 1)*input[(i + 1)*NCOLS + j] +
-          kernel(2, 2)*input[(i + 1)*NCOLS + (j + 1)];
+    //     int mid = kernel(1, 0)*input[(i)*NCOLS + (j - 1)] +
+    //       kernel(1, 1)*input[(i)*NCOLS + (j)] +
+    //       kernel(1, 2)*input[(i)*NCOLS + (j + 1)];
 
-        cout << "top = " << top << endl;
-        cout << "mid = " << mid << endl;
-        cout << "low = " << low << endl;
-        cout << "---------" << endl;
-        correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
-          top + mid + low;
-      }
-    }
+    //     int low = kernel(2, 0)*input[(i + 1)*NCOLS + (j - 1)] +
+    //       kernel(2, 1)*input[(i + 1)*NCOLS + j] +
+    //       kernel(2, 2)*input[(i + 1)*NCOLS + (j + 1)];
+
+    //     cout << "top = " << top << endl;
+    //     cout << "mid = " << mid << endl;
+    //     cout << "low = " << low << endl;
+    //     cout << "---------" << endl;
+    //     correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
+    //       top + mid + low;
+    //   }
+    // }
 
     cout << "Correct output" << endl;
     for (int i = 0; i < OUT_ROWS; i++) {
       for (int j = 0; j < OUT_COLS; j++) {
-        cout << correctOutput[i*OUT_COLS + j] << " ";
+        //cout << correctOutput[i*OUT_COLS + j] << " ";
+        cout << correctOutput(i, j) << " ";
       }
       cout << endl;
     }
 
     CircularFIFO<int, NROWS*NCOLS> inputBuf;
-    for (int i = 0; i < NROWS; i++) {
-      for (int j = 0; j < NCOLS; j++) {
-        inputBuf.write(input[i*NCOLS + j]);
-      }
-    }
+    fill(inputBuf, input);
+
+    // for (int i = 0; i < NROWS; i++) {
+    //   for (int j = 0; j < NCOLS; j++) {
+    //     inputBuf.write(input[i*NCOLS + j]);
+    //   }
+    // }
 
     CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
     lineBufferConv<int, 3, 3, NROWS, NCOLS>(inputBuf, kernel, lbOutput);
@@ -687,7 +739,8 @@ namespace swlb {
     REQUIRE(lineBufOutput.size() == correctOutput.size());
     for (int i = 0; i < OUT_ROWS; i++) {
       for (int j = 0; j < OUT_COLS; j++) {
-        REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput[i*OUT_COLS + j]);
+        //REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput[i*OUT_COLS + j]);
+        REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput(i, j));
       }
     }
     
