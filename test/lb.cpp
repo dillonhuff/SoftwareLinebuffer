@@ -556,16 +556,16 @@ namespace swlb {
   void lineBufferConv3x3(CircularFIFO<int, NROWS*NCOLS>& input,
                          const vector<int>& kernel,
                          CircularFIFO<int, OUT_ROWS*OUT_COLS>& lbOutput) {
-    LineBuffer<int, 3, 3, NCOLS> lb;
+    ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
     
     while (!lb.full()) {
-      cout << "Writing " << input.read() << " to linebuffer" << endl;
+      //cout << "Writing " << input.read() << " to linebuffer" << endl;
       lb.write(input.read());
       input.pop();
     }
 
-    lb.printWindow();
-    lb.printBuffer();
+    // lb.printWindow();
+    // lb.printBuffer();
 
     assert(lb.read(-1, -1) == 1);
     assert(lb.read(-1, 0) == 2);
@@ -578,7 +578,7 @@ namespace swlb {
     cout << "--------------" << endl;
     int numWrites = 0;
     while (!input.isEmpty()) {
-      if (!lb.eol() && !lb.sol()) {
+      if (lb.windowValid()) {
         int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
           kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
           kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
@@ -591,26 +591,26 @@ namespace swlb {
           kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
           kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
 
-        cout << "top = " << top << endl;
-        cout << "mid = " << mid << endl;
-        cout << "low = " << low << endl;
-        cout << "---------" << endl;
+        // cout << "top = " << top << endl;
+        // cout << "mid = " << mid << endl;
+        // cout << "low = " << low << endl;
+        // cout << "---------" << endl;
 
         int total = top + mid + low;
-        cout << "Writing " << total << " to output" << endl;
+        //cout << "Writing " << total << " to output" << endl;
         lbOutput.write(total);
         numWrites++;
 
-        cout << "Write number = " << numWrites << endl;
+        //cout << "Write number = " << numWrites << endl;
 
       }
 
       lb.pop();
       lb.write(input.read());
 
-      lb.printWindow();
-      lb.printBuffer();
-      cout << "--------------" << endl;
+      // lb.printWindow();
+      // lb.printBuffer();
+      // cout << "--------------" << endl;
       
       input.pop();
     }
@@ -664,87 +664,87 @@ namespace swlb {
     REQUIRE(lb.inEndMargin());
   }
   
-  // TEST_CASE("Using linebuffer for convolution") {
+  TEST_CASE("Using linebuffer for convolution") {
 
-  //   vector<int> input;
-  //   int val = 1;
-  //   for (int i = 0; i < NROWS; i++) {
-  //     for (int j = 0; j < NCOLS; j++) {
-  //       input.push_back(val);
-  //       val++;
-  //     }
-  //   }
+    vector<int> input;
+    int val = 1;
+    for (int i = 0; i < NROWS; i++) {
+      for (int j = 0; j < NCOLS; j++) {
+        input.push_back(val);
+        val++;
+      }
+    }
 
-  //   vector<int> kernel;
-  //   for (int i = 0; i < KERNEL_WIDTH; i++) {
-  //     for (int j = 0; j < KERNEL_WIDTH; j++) {
-  //       kernel.push_back(i + j);
-  //     }
-  //   }
+    vector<int> kernel;
+    for (int i = 0; i < KERNEL_WIDTH; i++) {
+      for (int j = 0; j < KERNEL_WIDTH; j++) {
+        kernel.push_back(i + j);
+      }
+    }
 
-  //   vector<int> correctOutput;
-  //   correctOutput.resize(OUT_ROWS*OUT_COLS);
+    vector<int> correctOutput;
+    correctOutput.resize(OUT_ROWS*OUT_COLS);
 
-  //   for (int i = 1; i < NROWS - 1; i++) {
-  //     for (int j = 1; j < NCOLS - 1; j++) {
-  //       int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + (j - 1)] +
-  //         kernel[0*KERNEL_WIDTH + 1]*input[(i - 1)*NCOLS + j] +
-  //         kernel[0*KERNEL_WIDTH + 2]*input[(i - 1)*NCOLS + (j + 1)];
+    for (int i = 1; i < NROWS - 1; i++) {
+      for (int j = 1; j < NCOLS - 1; j++) {
+        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + (j - 1)] +
+          kernel[0*KERNEL_WIDTH + 1]*input[(i - 1)*NCOLS + j] +
+          kernel[0*KERNEL_WIDTH + 2]*input[(i - 1)*NCOLS + (j + 1)];
 
-  //       int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + (j - 1)] +
-  //         kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + (j)] +
-  //         kernel[1*KERNEL_WIDTH + 2]*input[(i)*NCOLS + (j + 1)];
+        int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + (j - 1)] +
+          kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + (j)] +
+          kernel[1*KERNEL_WIDTH + 2]*input[(i)*NCOLS + (j + 1)];
 
-  //       int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + (j - 1)] +
-  //         kernel[2*KERNEL_WIDTH + 1]*input[(i + 1)*NCOLS + j] +
-  //         kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + (j + 1)];
+        int low = kernel[2*KERNEL_WIDTH + 0]*input[(i + 1)*NCOLS + (j - 1)] +
+          kernel[2*KERNEL_WIDTH + 1]*input[(i + 1)*NCOLS + j] +
+          kernel[2*KERNEL_WIDTH + 2]*input[(i + 1)*NCOLS + (j + 1)];
 
-  //       cout << "top = " << top << endl;
-  //       cout << "mid = " << mid << endl;
-  //       cout << "low = " << low << endl;
-  //       cout << "---------" << endl;
-  //       correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
-  //         top + mid + low;
-  //     }
-  //   }
+        cout << "top = " << top << endl;
+        cout << "mid = " << mid << endl;
+        cout << "low = " << low << endl;
+        cout << "---------" << endl;
+        correctOutput[(i - 1)*OUT_COLS + (j - 1)] =
+          top + mid + low;
+      }
+    }
 
-  //   cout << "Correct output" << endl;
-  //   for (int i = 0; i < OUT_ROWS; i++) {
-  //     for (int j = 0; j < OUT_COLS; j++) {
-  //       cout << correctOutput[i*OUT_COLS + j] << " ";
-  //     }
-  //     cout << endl;
-  //   }
+    cout << "Correct output" << endl;
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        cout << correctOutput[i*OUT_COLS + j] << " ";
+      }
+      cout << endl;
+    }
 
-  //   CircularFIFO<int, NROWS*NCOLS> inputBuf;
-  //   for (int i = 0; i < NROWS; i++) {
-  //     for (int j = 0; j < NCOLS; j++) {
-  //       inputBuf.write(input[i*NCOLS + j]);
-  //     }
-  //   }
+    CircularFIFO<int, NROWS*NCOLS> inputBuf;
+    for (int i = 0; i < NROWS; i++) {
+      for (int j = 0; j < NCOLS; j++) {
+        inputBuf.write(input[i*NCOLS + j]);
+      }
+    }
 
-  //   CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
-  //   lineBufferConv3x3(inputBuf, kernel, lbOutput);
+    CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
+    lineBufferConv3x3(inputBuf, kernel, lbOutput);
 
-  //   vector<int> lineBufOutput;
-  //   cout << "LB output" << endl;
-  //   for (int i = 0; i < OUT_ROWS; i++) {
-  //     for (int j = 0; j < OUT_COLS; j++) {
-  //       cout << lbOutput.read() << " ";
-  //       lineBufOutput.push_back(lbOutput.read());
-  //       lbOutput.pop();
+    vector<int> lineBufOutput;
+    cout << "LB output" << endl;
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        cout << lbOutput.read() << " ";
+        lineBufOutput.push_back(lbOutput.read());
+        lbOutput.pop();
 
-  //     }
-  //     cout << endl;
-  //   }
+      }
+      cout << endl;
+    }
 
-  //   REQUIRE(lineBufOutput.size() == correctOutput.size());
-  //   for (int i = 0; i < OUT_ROWS; i++) {
-  //     for (int j = 0; j < OUT_COLS; j++) {
-  //       REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput[i*OUT_COLS + j]);
-  //     }
-  //   }
+    REQUIRE(lineBufOutput.size() == correctOutput.size());
+    for (int i = 0; i < OUT_ROWS; i++) {
+      for (int j = 0; j < OUT_COLS; j++) {
+        REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput[i*OUT_COLS + j]);
+      }
+    }
     
-  // }
+  }
 
 }
