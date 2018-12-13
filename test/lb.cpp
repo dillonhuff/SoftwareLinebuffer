@@ -582,7 +582,8 @@ namespace swlb {
     
     cout << "--------------" << endl;
     int numWrites = 0;
-    while (!input.isEmpty()) {
+    //while (!input.isEmpty()) {
+    while (true) {
       cout << "Next center = " << lb.nextReadCenter() << ", valid now = " << lb.windowValid() << endl;
 
       if (lb.windowValid()) {
@@ -612,7 +613,9 @@ namespace swlb {
       
       }
 
-
+      if (input.isEmpty()) {
+        break;
+      }
 
       lb.pop();
       lb.write(input.read());
@@ -624,63 +627,32 @@ namespace swlb {
       input.pop();
     }
 
-    if (lb.windowValid()) {
-      int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
-        kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
-        kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
+    // if (lb.windowValid()) {
+    //   int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
+    //     kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
+    //     kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
 
-      int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
-        kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
-        kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
+    //   int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
+    //     kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
+    //     kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
 
-      int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
-        kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
-        kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
+    //   int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
+    //     kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
+    //     kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
 
-      // cout << "top = " << top << endl;
-      // cout << "mid = " << mid << endl;
-      // cout << "low = " << low << endl;
-      // cout << "---------" << endl;
+    //   // cout << "top = " << top << endl;
+    //   // cout << "mid = " << mid << endl;
+    //   // cout << "low = " << low << endl;
+    //   // cout << "---------" << endl;
 
-      int total = top + mid + low;
-      //cout << "Writing " << total << " to output" << endl;
-      lbOutput.write(total);
-      numWrites++;
+    //   int total = top + mid + low;
+    //   //cout << "Writing " << total << " to output" << endl;
+    //   lbOutput.write(total);
+    //   numWrites++;
 
-      //cout << "Write number = " << numWrites << endl;
-    }
+    //   //cout << "Write number = " << numWrites << endl;
+    // }
   }
-  // TEST_CASE("On startup linebuffer read is at SOL") {
-  //   LineBuffer<int, 3, 3, 10> lb;
-  //   REQUIRE(lb.inStartMargin());
-  // }
-
-  // TEST_CASE("On startup linebuffer read is not at EOL") {
-  //   LineBuffer<int, 3, 3, 10> lb;
-  //   REQUIRE(!lb.inEndMargin());
-  // }
-
-  // TEST_CASE("On startup linebuffer window is not valid") {
-  //   LineBuffer<int, 3, 3, 10> lb;
-  //   REQUIRE(!lb.windowValid());
-  // }
-
-  // TEST_CASE("After loading 23 elements the buffer is valid for the first time") {
-  //   LineBuffer<int, 3, 3, 10> lb;
-  //   REQUIRE(!lb.windowValid());
-
-  //   for (int i = 0; i < 23; i++) {
-  //     REQUIRE(!lb.windowValid());
-  //     lb.write(i);
-  //   }
-
-  //   REQUIRE(lb.windowValid());
-
-  //   lb.pop();
-
-  //   REQUIRE(!lb.windowValid());
-  // }
-
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
     LineBuffer<int, 3, 3, 10> lb;
