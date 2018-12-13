@@ -318,6 +318,7 @@ namespace swlb {
 
       return inBounds;
     }
+
     bool windowValid() const {
 
       return nextReadInBounds() &&
@@ -351,6 +352,23 @@ namespace swlb {
       for (int i = 0; i < LB_SIZE; i++) {
         cout << buf[i] << " ";
       }
+    }
+
+    Mem2D<ElemType, WindowRows, WindowCols>
+    getWindow() const {
+      Mem2D<ElemType, WindowRows, WindowCols> window;      
+      for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
+        for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
+
+          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+          int ind = rawInd % LB_SIZE;
+          window.set(rowOffset, colOffset, buf[ind]);
+
+        }
+
+      }
+
+      return window;
     }
 
     void printWindow() {
@@ -436,6 +454,15 @@ namespace swlb {
       }
     }
 
+    int offset = 0;
+    
+    auto win = lb.getWindow();
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        REQUIRE(win(i, j) == mem(i, j));
+      }
+    }
+
     while ((rowInd < NROWS) && (colInd < NCOLS)) {
 
       if (lb.windowValid()) {
@@ -454,12 +481,23 @@ namespace swlb {
       if (colInd == 0) {
         rowInd++;
       }
+
+      offset++;
+
+      if (lb.windowValid()) {
+        auto win = lb.getWindow();
+        int offRows = offset / NCOLS;
+        int offCols = offset % NCOLS;
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < 3; j++) {
+            REQUIRE(win(i, j) == mem(offRows + i, offCols + j));
+          }
+        }
+      }
       
     }
 
     lb.printWindow();
-
-    REQUIRE(false);
   }
   
   TEST_CASE("Circular buffer") {
