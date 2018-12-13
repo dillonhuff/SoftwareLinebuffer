@@ -570,24 +570,31 @@ namespace swlb {
     for (int i = 1; i < NROWS - 1; i++) {
       for (int j = 1; j < NCOLS - 1; j++) {
 
-        int top = kernel(0, 0)*input((i - 1), (j - 1)) +
-          kernel(0, 1)*input((i - 1), j) +
-          kernel(0, 2)*input((i - 1), (j + 1));
+        int res = 0;
+        for (int r = 0; r < NumKernelRows; r++) {
+          for (int c = 0; c < NumKernelCols; c++) {
+            res += kernel(r, c) * input(i + r - (NumKernelRows / 2), j + c - (NumKernelCols / 2));
+          }
+        }
+        // int top = kernel(0, 0)*input((i - 1), (j - 1)) +
+        //   kernel(0, 1)*input((i - 1), j) +
+        //   kernel(0, 2)*input((i - 1), (j + 1));
 
-        int mid = kernel(1, 0)*input((i), (j - 1)) +
-          kernel(1, 1)*input((i), (j)) +
-          kernel(1, 2)*input((i), (j + 1));
+        // int mid = kernel(1, 0)*input((i), (j - 1)) +
+        //   kernel(1, 1)*input((i), (j)) +
+        //   kernel(1, 2)*input((i), (j + 1));
 
-        int low = kernel(2, 0)*input((i + 1), (j - 1)) +
-          kernel(2, 1)*input((i + 1), j) +
-          kernel(2, 2)*input((i + 1), (j + 1));
+        // int low = kernel(2, 0)*input((i + 1), (j - 1)) +
+        //   kernel(2, 1)*input((i + 1), j) +
+        //   kernel(2, 2)*input((i + 1), (j + 1));
 
-        cout << "top = " << top << endl;
-        cout << "mid = " << mid << endl;
-        cout << "low = " << low << endl;
-        cout << "---------" << endl;
+        // cout << "top = " << top << endl;
+        // cout << "mid = " << mid << endl;
+        // cout << "low = " << low << endl;
+        // cout << "---------" << endl;
 
-        output.set(i - 1, j - 1, top + mid + low);
+        output.set(i - 1, j - 1, res);
+        //output.set(i - 1, j - 1, top + mid + low);
       }
     }
   }
