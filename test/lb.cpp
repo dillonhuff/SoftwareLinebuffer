@@ -570,8 +570,6 @@ namespace swlb {
       input.pop();
     }
 
-    int numWrites = 0;
-
     while (true) {
 
       if (lb.windowValid()) {
@@ -583,8 +581,6 @@ namespace swlb {
         }
 
         lbOutput.write(res);
-        numWrites++;
-
       }
 
       if (input.isEmpty()) {
