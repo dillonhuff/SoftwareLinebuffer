@@ -566,27 +566,13 @@ namespace swlb {
     ImageBuffer<int, NumKernelRows, NumKernelCols, NumImageRows, NumImageCols> lb;
     
     while (!lb.windowValid()) {
-      //cout << "Writing " << input.read() << " to linebuffer" << endl;
       lb.write(input.read());
       input.pop();
     }
 
-    // lb.printWindow();
-    // lb.printBuffer();
-
-    assert(lb.read(-1, -1) == 1);
-    assert(lb.read(-1, 0) == 2);
-    assert(lb.read(-1, 1) == 3);    
-
-    assert(lb.read(0, -1) == 11);
-    assert(lb.read(0, 0) == 12);
-    assert(lb.read(0, 1) == 13);
-    
-    cout << "--------------" << endl;
     int numWrites = 0;
 
     while (true) {
-      cout << "Next center = " << lb.nextReadCenter() << ", valid now = " << lb.windowValid() << endl;
 
       if (lb.windowValid()) {
         int res = 0;
