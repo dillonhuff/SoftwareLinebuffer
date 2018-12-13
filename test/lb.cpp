@@ -317,7 +317,15 @@ namespace swlb {
     void pop() {
       readInd = (readInd + 1) % LB_SIZE;
 
-      if (readInd == writeInd) {
+      int nextRow = readTopLeft.row;
+      int nextCol = readTopLeft.col + 1;
+      if (nextCol == NumImageCols) {
+        nextCol = 0;
+        nextRow = nextRow + 1;
+      }
+      readTopLeft = {nextRow, nextCol};
+
+      if (readInd == readInd) {
         empty = true;
       }
     }
