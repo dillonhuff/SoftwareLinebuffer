@@ -211,7 +211,14 @@ namespace swlb {
   public:
     int row;
     int col;
+
+    PixelLoc() : row(0), col(0) {}
+    PixelLoc(const int r, const int c) : row(r), col(c) {}
   };
+
+  bool operator==(const PixelLoc a, const PixelLoc b) {
+    return (a.row == b.row) && (a.col == b.col);
+  }
   
   template<typename ElemType, int WindowRows, int WindowCols, int NumImageRows, int NumImageCols>
   class ImageBuffer {
@@ -292,7 +299,7 @@ namespace swlb {
     }
 
     PixelLoc nextReadCenter() const {
-      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft + WINDOW_COL_MARGIN};
+      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN};
     }
 
     bool windowFull() const {
@@ -356,6 +363,26 @@ namespace swlb {
     }
     
   };
+
+  TEST_CASE("First window of an imagebuffer will be at (1, 1)") {
+    ImageBuffer<int, 3, 3, 10, 10> lb;
+    REQUIRE(lb.nextReadCenter() == PixelLoc(1, 1));
+  }
+
+  TEST_CASE("On initialization imagebuffer window is not valid") {
+    ImageBuffer<int, 3, 3, 10, 10> lb;
+    REQUIRE(!lb.windowValid());
+  }
+
+  TEST_CASE("After loading enough rows imagebuffer window is valid") {
+    ImageBuffer<int, 3, 3, 10, 10> lb;
+    for (int i = 0; i < 10*2 + 3; i++) {
+      REQUIRE(!lb.windowValid());
+      lb.write(i);
+    }
+
+    REQUIRE(lb.windowValid());
+  }
   
   TEST_CASE("Circular buffer") {
     CircularFIFO<int, 100> cb;
