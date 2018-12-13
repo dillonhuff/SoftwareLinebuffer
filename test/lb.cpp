@@ -226,7 +226,6 @@ namespace swlb {
     const static int OUTPUT_BOTTOM_BOUND = (WindowRows - WINDOW_ROW_MARGIN) - 1;
 
     const static int LB_SIZE = (WindowRows - 1)*NumImageCols + WINDOW_COL_MARGIN + WindowCols;
-
     
     ElemType buf[LB_SIZE];
     
@@ -236,9 +235,6 @@ namespace swlb {
     PixelLoc readTopLeft;
     PixelLoc writeTopLeft;
 
-    int nextWriteRow;
-    int nextWriteCol;
-    
     bool empty;
 
   public:
@@ -266,6 +262,15 @@ namespace swlb {
       empty = false;
       buf[writeInd] = t;
 
+      int nextRow = writeTopLeft.row;
+      int nextCol = writeTopLeft.col + 1;
+      if (nextCol == NumImageCols) {
+        nextCol = 0;
+        nextRow = nextRow + 1;
+      }
+
+      writeTopLeft = {nextRow, nextCol};
+      
       writeInd = modInc(writeInd, LB_SIZE);
     }
 
@@ -290,9 +295,12 @@ namespace swlb {
       return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft + WINDOW_COL_MARGIN};
     }
 
-    bool windowValid() const {
-      int nValid = numValidEntries();
+    bool windowFull() const {
+      int nValid = numValidEntries();      
+      return (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+    }
 
+    bool windowValid() const {
       PixelLoc center = nextReadCenter();
 
       bool nextReadInBounds =
@@ -302,7 +310,8 @@ namespace swlb {
         (center.row <= OUTPUT_BOTTOM_BOUND);
 
       return nextReadInBounds &&
-        (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+        windowFull();
+
     }
 
     void pop() {
