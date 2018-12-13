@@ -584,7 +584,7 @@ namespace swlb {
     
     cout << "--------------" << endl;
     int numWrites = 0;
-    //while (!input.isEmpty()) {
+
     while (true) {
       cout << "Next center = " << lb.nextReadCenter() << ", valid now = " << lb.windowValid() << endl;
 
@@ -595,31 +595,10 @@ namespace swlb {
             res += kernel(row, col)*lb.read(row - (NumKernelRows / 2), col - (NumKernelCols / 2));
           }
         }
-        // int top = kernel(0, 0)*lb.read(-1, -1) +
-        //   kernel(0, 1)*lb.read(-1, 0) +
-        //   kernel(0, 2)*lb.read(-1, 1);
 
-        // int mid = kernel(1, 0)*lb.read(0, -1) +
-        //   kernel(1, 1)*lb.read(0, 0) +
-        //   kernel(1, 2)*lb.read(0, 1);
-
-        // int low = kernel(2, 0)*lb.read(1, -1) +
-        //   kernel(2, 1)*lb.read(1, 0) +
-        //   kernel(2, 2)*lb.read(1, 1);
-
-        // cout << "top = " << top << endl;
-        // cout << "mid = " << mid << endl;
-        // cout << "low = " << low << endl;
-        // cout << "---------" << endl;
-
-        //int total = top + mid + low;
-        //cout << "Writing " << total << " to output" << endl;
-        //lbOutput.write(total);
         lbOutput.write(res);
         numWrites++;
 
-        //cout << "Write number = " << numWrites << endl;
-      
       }
 
       if (input.isEmpty()) {
@@ -629,10 +608,6 @@ namespace swlb {
       lb.pop();
       lb.write(input.read());
 
-      // lb.printWindow();
-      // lb.printBuffer();
-      // cout << "--------------" << endl;
-      
       input.pop();
     }
   }
