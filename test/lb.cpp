@@ -623,8 +623,33 @@ namespace swlb {
       
       input.pop();
     }
-  }
 
+    if (lb.windowValid()) {
+      int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
+        kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
+        kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
+
+      int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
+        kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
+        kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
+
+      int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
+        kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
+        kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
+
+      // cout << "top = " << top << endl;
+      // cout << "mid = " << mid << endl;
+      // cout << "low = " << low << endl;
+      // cout << "---------" << endl;
+
+      int total = top + mid + low;
+      //cout << "Writing " << total << " to output" << endl;
+      lbOutput.write(total);
+      numWrites++;
+
+      //cout << "Write number = " << numWrites << endl;
+    }
+  }
   // TEST_CASE("On startup linebuffer read is at SOL") {
   //   LineBuffer<int, 3, 3, 10> lb;
   //   REQUIRE(lb.inStartMargin());
