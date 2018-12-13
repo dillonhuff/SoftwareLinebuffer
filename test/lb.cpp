@@ -557,11 +557,13 @@ namespace swlb {
   
   const int OUT_ROWS = NROWS - 2;
   const int OUT_COLS = NCOLS - 2;
-  
-  void lineBufferConv3x3(CircularFIFO<int, NROWS*NCOLS>& input,
-                         const Mem2D<int, 3, 3>& kernel,
-                         CircularFIFO<int, OUT_ROWS*OUT_COLS>& lbOutput) {
-    ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
+
+  template<typename ElemType, int NumKernelRows, int NumKernelCols, int NumImageRows, int NumImageCols>
+  void lineBufferConv(CircularFIFO<ElemType, NumImageRows*NumImageCols>& input,
+                      const Mem2D<ElemType, NumKernelRows, NumKernelCols>& kernel,
+                      CircularFIFO<ElemType, (NumImageRows - 2*((NumKernelRows)/2))*(NumImageCols - 2*((NumKernelCols)/2)) >& lbOutput) {
+
+    ImageBuffer<int, NumKernelRows, NumKernelCols, NumImageRows, NumImageCols> lb;
     
     while (!lb.windowValid()) {
       //cout << "Writing " << input.read() << " to linebuffer" << endl;
@@ -704,7 +706,7 @@ namespace swlb {
     }
 
     CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
-    lineBufferConv3x3(inputBuf, kernel, lbOutput);
+    lineBufferConv<int, 3, 3, NROWS, NCOLS>(inputBuf, kernel, lbOutput);
 
     vector<int> lineBufOutput;
     cout << "LB output" << endl;
