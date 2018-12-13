@@ -35,7 +35,7 @@ namespace swlb {
     }
 
     void set(const int r, const int c, const ElemType tp) {
-      return elems[r*NumCols + c] = tp;
+      elems[r*NumCols + c] = tp;
     }
   };
 
@@ -123,7 +123,7 @@ namespace swlb {
       return ((((readInd + (WindowCols / 2))) % WindowCols) == 0);
     }
 
-    bool inStartMargin() {
+    bool inStartMargin() const {
       return (readInd % NumImageCols) < (WindowCols / 2);
     }
 
@@ -144,12 +144,16 @@ namespace swlb {
       return (LB_SIZE - readInd) + writeInd;
     }
 
-    bool windowValid() const {
-      int nValid = numValidEntries();
-      return nValid >= ((WindowRows - 1)*NumImageCols + WindowCols);
+    std::pair<int, int> windowStart() {
+      
     }
 
-    bool inEndMargin() {
+    bool windowValid() const {
+      int nValid = numValidEntries();
+      return !inEndMargin() && !inStartMargin() && (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+    }
+
+    bool inEndMargin() const {
       int rc = WindowCols / 2;
       cout << "rc = " << rc << endl;
       int endMargin = NumImageCols - (WindowCols / 2);
@@ -203,6 +207,139 @@ namespace swlb {
     
   };
 
+  class PixelLoc {
+  public:
+    int row;
+    int col;
+  };
+  
+  template<typename ElemType, int WindowRows, int WindowCols, int NumImageRows, int NumImageCols>
+  class ImageBuffer {
+
+    const static int WINDOW_COL_MARGIN = (WindowCols / 2);
+    const static int WINDOW_ROW_MARGIN = (WindowRows / 2);
+
+    const static int OUTPUT_LEFT_BOUND = WINDOW_COL_MARGIN;
+    const static int OUTPUT_RIGHT_BOUND = (WindowCols - WINDOW_COL_MARGIN) - 1;
+
+    const static int OUTPUT_TOP_BOUND = WINDOW_ROW_MARGIN;
+    const static int OUTPUT_BOTTOM_BOUND = (WindowRows - WINDOW_ROW_MARGIN) - 1;
+
+    const static int LB_SIZE = (WindowRows - 1)*NumImageCols + WINDOW_COL_MARGIN + WindowCols;
+
+    
+    ElemType buf[LB_SIZE];
+    
+    int writeInd;
+    int readInd;
+
+    PixelLoc readTopLeft;
+    PixelLoc writeTopLeft;
+
+    int nextWriteRow;
+    int nextWriteCol;
+    
+    bool empty;
+
+  public:
+
+    ImageBuffer() {
+      writeInd = 0;
+      readInd = 0;
+
+      readTopLeft = {0, 0};
+      writeTopLeft = {0, 0};
+      
+      empty = true;
+    }
+
+    bool full() const {
+      // cout << "writeInd = " << writeInd << endl;
+      // cout << "readInd  = " << readInd << endl;
+      // cout << "LB_SIZE  = " << LB_SIZE << endl;
+      return !empty && (writeInd == readInd);
+    }
+
+    void write(ElemType t) {
+      assert(!full());
+
+      empty = false;
+      buf[writeInd] = t;
+
+      writeInd = modInc(writeInd, LB_SIZE);
+    }
+
+    int numValidEntries() const {
+      if (empty) {
+        return 0;
+      }
+
+      if (readInd < writeInd) {
+        return writeInd - readInd;
+      }
+
+      if (readInd == writeInd) {
+        return LB_SIZE;
+      }
+
+      // readInd > writeInd
+      return (LB_SIZE - readInd) + writeInd;
+    }
+
+    PixelLoc nextReadCenter() const {
+      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft + WINDOW_COL_MARGIN};
+    }
+
+    bool windowValid() const {
+      int nValid = numValidEntries();
+
+      PixelLoc center = nextReadCenter();
+
+      bool nextReadInBounds =
+        (OUTPUT_LEFT_BOUND <= center.col) &&
+        (center.col <= OUTPUT_RIGHT_BOUND) &&
+        (OUTPUT_TOP_BOUND <= center.row) &&
+        (center.row <= OUTPUT_BOTTOM_BOUND);
+
+      return nextReadInBounds &&
+        (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+    }
+
+    void pop() {
+      readInd = (readInd + 1) % LB_SIZE;
+
+      if (readInd == writeInd) {
+        empty = true;
+      }
+    }
+
+    ElemType read(const int rowOffset, const int colOffset) {
+      assert(rowOffset <= (WindowRows / 2));
+      assert(colOffset <= (WindowCols / 2));
+
+      return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
+    }
+
+    void printBuffer() {
+      for (int i = 0; i < LB_SIZE; i++) {
+        cout << buf[i] << " ";
+      }
+    }
+
+    void printWindow() {
+      for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
+        for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
+          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+          int ind = rawInd % LB_SIZE;
+          cout << buf[ind] << " ";
+        }
+
+        cout << endl;
+      }
+    }
+    
+  };
+  
   TEST_CASE("Circular buffer") {
     CircularFIFO<int, 100> cb;
 
@@ -319,60 +456,96 @@ namespace swlb {
     }
   }
 
-  TEST_CASE("On startup linebuffer read is at SOL") {
-    LineBuffer<int, 3, 3, 10> lb;
-    REQUIRE(lb.inStartMargin());
-  }
+  // TEST_CASE("On startup linebuffer read is at SOL") {
+  //   LineBuffer<int, 3, 3, 10> lb;
+  //   REQUIRE(lb.inStartMargin());
+  // }
 
-  TEST_CASE("On startup linebuffer read is not at EOL") {
-    LineBuffer<int, 3, 3, 10> lb;
-    REQUIRE(!lb.inEndMargin());
-  }
+  // TEST_CASE("On startup linebuffer read is not at EOL") {
+  //   LineBuffer<int, 3, 3, 10> lb;
+  //   REQUIRE(!lb.inEndMargin());
+  // }
 
-  TEST_CASE("On startup linebuffer window is not valid") {
-    LineBuffer<int, 3, 3, 10> lb;
-    REQUIRE(!lb.windowValid());
-  }
+  // TEST_CASE("On startup linebuffer window is not valid") {
+  //   LineBuffer<int, 3, 3, 10> lb;
+  //   REQUIRE(!lb.windowValid());
+  // }
 
-  TEST_CASE("After loading 23 elements the buffer is valid for the first time") {
-    LineBuffer<int, 3, 3, 10> lb;
-    REQUIRE(!lb.windowValid());
+  // TEST_CASE("After loading 23 elements the buffer is valid for the first time") {
+  //   LineBuffer<int, 3, 3, 10> lb;
+  //   REQUIRE(!lb.windowValid());
 
-    for (int i = 0; i < 23; i++) {
-      REQUIRE(!lb.windowValid());
-      lb.write(i);
-    }
+  //   for (int i = 0; i < 23; i++) {
+  //     REQUIRE(!lb.windowValid());
+  //     lb.write(i);
+  //   }
 
-    REQUIRE(lb.windowValid());
+  //   REQUIRE(lb.windowValid());
 
-    lb.pop();
+  //   lb.pop();
 
-    REQUIRE(!lb.windowValid());
-  }
+  //   REQUIRE(!lb.windowValid());
+  // }
 
-  TEST_CASE("Loading values in sequence") {
-    LineBuffer<int, 3, 3, 10> lb;
+  // TEST_CASE("Loading values in sequence") {
 
-    int in = 1;
-    while (!lb.windowValid()) {
-      lb.write(in);
-      in++;
-    }
+  //   const int NCOLS = 10;
 
-    cout << "First window" << endl;
-    lb.printWindow();
-    
-    for (int i = 0; i < 11; i++) {
-      lb.pop();
-      lb.write(in);
-      in++;
-    }
+  //   Mem2D<int, 8, NCOLS> mem;
+  //   int val = 1;
+  //   for (int i = 0; i < 8; i++) {
+  //     for (int j = 0; j < 10; j++) {
+  //       mem.set(i, j, val);
+  //       val++;
+  //     }
+  //   }
 
-    lb.printWindow();
+  //   LineBuffer<int, 3, 3, 10> lb;
 
-    REQUIRE(false);
+  //   int rowInd = 0;
+  //   int colInd = 0;
+
+  //   // Startup: Fill the linebuffer
+  //   while (!lb.windowValid()) {
+  //     lb.write(mem(rowInd, colInd));
+  //     colInd = (colInd + 1) % NCOLS;
+  //     if (colInd == 0) {
+  //       rowInd++;
+  //     }
+  //   }
+
+  //   while ((rowInd < NROWS) && (colInd < NCOLS)) {
+
+  //     if (lb.windowValid()) {
+  //       cout << "valid ";
+  //     } else {
+  //       cout << "INVALID ";
+  //     }
+  //     cout << "window" << endl;
+  //     lb.printWindow();
+
+  //     lb.pop();
+
+  //     lb.write(mem(rowInd, colInd));
+
+  //     colInd = (colInd + 1) % NCOLS;
+  //     if (colInd == 0) {
+  //       rowInd++;
+  //     }
       
-  }
+  //   }
+
+  //   // for (int i = 0; i < 11; i++) {
+  //   //   lb.pop();
+  //   //   lb.write(in);
+  //   //   in++;
+  //   // }
+
+  //   lb.printWindow();
+
+  //   REQUIRE(false);
+      
+  // }
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
     LineBuffer<int, 3, 3, 10> lb;
