@@ -19,6 +19,26 @@ namespace swlb {
     }
   }
 
+  template<typename ElemType, int NumRows, int NumCols>
+  class Mem2D {
+
+    ElemType elems[NumRows*NumCols];
+
+  public:
+
+    Mem2D() {
+      
+    }
+
+    ElemType operator()(const int r, const int c) const {
+      return elems[r*NumCols + c];
+    }
+
+    void set(const int r, const int c, const ElemType tp) {
+      return elems[r*NumCols + c] = tp;
+    }
+  };
+
   template<typename ElemType, int size>
   class CircularFIFO {
 
@@ -328,6 +348,30 @@ namespace swlb {
     lb.pop();
 
     REQUIRE(!lb.windowValid());
+  }
+
+  TEST_CASE("Loading values in sequence") {
+    LineBuffer<int, 3, 3, 10> lb;
+
+    int in = 1;
+    while (!lb.windowValid()) {
+      lb.write(in);
+      in++;
+    }
+
+    cout << "First window" << endl;
+    lb.printWindow();
+    
+    for (int i = 0; i < 11; i++) {
+      lb.pop();
+      lb.write(in);
+      in++;
+    }
+
+    lb.printWindow();
+
+    REQUIRE(false);
+      
   }
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
