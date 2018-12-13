@@ -219,6 +219,11 @@ namespace swlb {
   bool operator==(const PixelLoc a, const PixelLoc b) {
     return (a.row == b.row) && (a.col == b.col);
   }
+
+  std::ostream& operator<<(std::ostream& out, const PixelLoc b) {
+    out << "(" << b.row << ", " << b.col << ")";
+    return out;
+  }
   
   template<typename ElemType, int WindowRows, int WindowCols, int NumImageRows, int NumImageCols>
   class ImageBuffer {
@@ -558,7 +563,7 @@ namespace swlb {
                          CircularFIFO<int, OUT_ROWS*OUT_COLS>& lbOutput) {
     ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
     
-    while (!lb.full()) {
+    while (!lb.windowValid()) {
       //cout << "Writing " << input.read() << " to linebuffer" << endl;
       lb.write(input.read());
       input.pop();
@@ -578,6 +583,8 @@ namespace swlb {
     cout << "--------------" << endl;
     int numWrites = 0;
     while (!input.isEmpty()) {
+      cout << "Next center = " << lb.nextReadCenter() << ", valid now = " << lb.windowValid() << endl;
+
       if (lb.windowValid()) {
         int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
           kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
@@ -602,8 +609,10 @@ namespace swlb {
         numWrites++;
 
         //cout << "Write number = " << numWrites << endl;
-
+      
       }
+
+
 
       lb.pop();
       lb.write(input.read());
