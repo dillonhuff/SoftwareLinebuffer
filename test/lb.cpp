@@ -408,60 +408,59 @@ namespace swlb {
     REQUIRE(lb.windowValid());
   }
 
-  // TEST_CASE("Loading values in sequence into imagebuffer") {
+  TEST_CASE("Loading values in sequence into imagebuffer") {
 
-  //   const int NROWS = 8;    
-  //   const int NCOLS = 10;
+    const int NROWS = 8;    
+    const int NCOLS = 10;
 
-  //   Mem2D<int, NROWS, NCOLS> mem;
-  //   int val = 1;
-  //   for (int i = 0; i < 8; i++) {
-  //     for (int j = 0; j < 10; j++) {
-  //       mem.set(i, j, val);
-  //       val++;
-  //     }
-  //   }
+    Mem2D<int, NROWS, NCOLS> mem;
+    int val = 1;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 10; j++) {
+        mem.set(i, j, val);
+        val++;
+      }
+    }
 
-  //   ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
+    ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
 
-  //   int rowInd = 0;
-  //   int colInd = 0;
+    int rowInd = 0;
+    int colInd = 0;
 
-  //   // Startup: Fill the linebuffer
-  //   while (!lb.windowValid()) {
-  //     lb.write(mem(rowInd, colInd));
-  //     colInd = (colInd + 1) % NCOLS;
-  //     if (colInd == 0) {
-  //       rowInd++;
-  //     }
-  //   }
+    // Startup: Fill the linebuffer
+    while (!lb.windowValid()) {
+      lb.write(mem(rowInd, colInd));
+      colInd = (colInd + 1) % NCOLS;
+      if (colInd == 0) {
+        rowInd++;
+      }
+    }
 
-  //   while ((rowInd < NROWS) && (colInd < NCOLS)) {
+    while ((rowInd < NROWS) && (colInd < NCOLS)) {
 
-  //     if (lb.windowValid()) {
-  //       cout << "valid ";
-  //     } else {
-  //       cout << "INVALID ";
-  //     }
-  //     cout << "window" << endl;
-  //     lb.printWindow();
+      if (lb.windowValid()) {
+        cout << "valid ";
+      } else {
+        cout << "INVALID ";
+      }
+      cout << "window" << endl;
+      lb.printWindow();
 
-  //     lb.pop();
+      lb.pop();
 
-  //     lb.write(mem(rowInd, colInd));
+      lb.write(mem(rowInd, colInd));
 
-  //     colInd = (colInd + 1) % NCOLS;
-  //     if (colInd == 0) {
-  //       rowInd++;
-  //     }
+      colInd = (colInd + 1) % NCOLS;
+      if (colInd == 0) {
+        rowInd++;
+      }
       
-  //   }
+    }
 
-  //   lb.printWindow();
+    lb.printWindow();
 
-  //   REQUIRE(false);
-      
-  // }
+    REQUIRE(false);
+  }
   
   TEST_CASE("Circular buffer") {
     CircularFIFO<int, 100> cb;
