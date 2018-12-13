@@ -555,11 +555,11 @@ namespace swlb {
   const int NROWS = 8;
   const int NCOLS = 10;
   
-  const int OUT_ROWS = NROWS - 2;    
+  const int OUT_ROWS = NROWS - 2;
   const int OUT_COLS = NCOLS - 2;
   
   void lineBufferConv3x3(CircularFIFO<int, NROWS*NCOLS>& input,
-                         const vector<int>& kernel,
+                         const Mem2D<int, 3, 3>& kernel,
                          CircularFIFO<int, OUT_ROWS*OUT_COLS>& lbOutput) {
     ImageBuffer<int, 3, 3, NROWS, NCOLS> lb;
     
@@ -587,17 +587,17 @@ namespace swlb {
       cout << "Next center = " << lb.nextReadCenter() << ", valid now = " << lb.windowValid() << endl;
 
       if (lb.windowValid()) {
-        int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
-          kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
-          kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
+        int top = kernel(0, 0)*lb.read(-1, -1) +
+          kernel(0, 1)*lb.read(-1, 0) +
+          kernel(0, 2)*lb.read(-1, 1);
 
-        int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
-          kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
-          kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
+        int mid = kernel(1, 0)*lb.read(0, -1) +
+          kernel(1, 1)*lb.read(0, 0) +
+          kernel(1, 2)*lb.read(0, 1);
 
-        int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
-          kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
-          kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
+        int low = kernel(2, 0)*lb.read(1, -1) +
+          kernel(2, 1)*lb.read(1, 0) +
+          kernel(2, 2)*lb.read(1, 1);
 
         // cout << "top = " << top << endl;
         // cout << "mid = " << mid << endl;
@@ -626,32 +626,6 @@ namespace swlb {
       
       input.pop();
     }
-
-    // if (lb.windowValid()) {
-    //   int top = kernel[0*KERNEL_WIDTH + 0]*lb.read(-1, -1) +
-    //     kernel[0*KERNEL_WIDTH + 1]*lb.read(-1, 0) +
-    //     kernel[0*KERNEL_WIDTH + 2]*lb.read(-1, 1);
-
-    //   int mid = kernel[1*KERNEL_WIDTH + 0]*lb.read(0, -1) +
-    //     kernel[1*KERNEL_WIDTH + 1]*lb.read(0, 0) +
-    //     kernel[1*KERNEL_WIDTH + 2]*lb.read(0, 1);
-
-    //   int low = kernel[2*KERNEL_WIDTH + 0]*lb.read(1, -1) +
-    //     kernel[2*KERNEL_WIDTH + 1]*lb.read(1, 0) +
-    //     kernel[2*KERNEL_WIDTH + 2]*lb.read(1, 1);
-
-    //   // cout << "top = " << top << endl;
-    //   // cout << "mid = " << mid << endl;
-    //   // cout << "low = " << low << endl;
-    //   // cout << "---------" << endl;
-
-    //   int total = top + mid + low;
-    //   //cout << "Writing " << total << " to output" << endl;
-    //   lbOutput.write(total);
-    //   numWrites++;
-
-    //   //cout << "Write number = " << numWrites << endl;
-    // }
   }
   
   TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
@@ -681,10 +655,10 @@ namespace swlb {
       }
     }
 
-    vector<int> kernel;
+    Mem2D<int, 3, 3> kernel;
     for (int i = 0; i < KERNEL_WIDTH; i++) {
       for (int j = 0; j < KERNEL_WIDTH; j++) {
-        kernel.push_back(i + j);
+        kernel.set(i, j, i + j);
       }
     }
 
@@ -693,9 +667,9 @@ namespace swlb {
 
     for (int i = 1; i < NROWS - 1; i++) {
       for (int j = 1; j < NCOLS - 1; j++) {
-        int top = kernel[0*KERNEL_WIDTH + 0]*input[(i - 1)*NCOLS + (j - 1)] +
-          kernel[0*KERNEL_WIDTH + 1]*input[(i - 1)*NCOLS + j] +
-          kernel[0*KERNEL_WIDTH + 2]*input[(i - 1)*NCOLS + (j + 1)];
+        int top = kernel(0, 0)*input[(i - 1)*NCOLS + (j - 1)] +
+          kernel(0, 1)*input[(i - 1)*NCOLS + j] +
+          kernel(0, 2)*input[(i - 1)*NCOLS + (j + 1)];
 
         int mid = kernel[1*KERNEL_WIDTH + 0]*input[(i)*NCOLS + (j - 1)] +
           kernel[1*KERNEL_WIDTH + 1]*input[(i)*NCOLS + (j)] +
