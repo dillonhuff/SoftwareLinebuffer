@@ -283,6 +283,14 @@ namespace swlb {
   // the first call to pop happens. Maybe we should actually shift the window
   // during writes and read the next values of each row register from the write
   // pointer?
+
+  // Now there is a new issue: windowValid becomes invalid if the read pointer
+  // gets incremented during the pops used to shift the register window in to
+  // its correct place. The pop reduces the distance between read and write addresses
+  // which reduces the number of elements in the buffer.
+
+  // I want to be able to stop loading elements (or start shifting the read
+  // pointer) during 
   template<typename ElemType, int NumImageRows, int NumImageCols>
   class ImageBuffer3x3 {
   public:
@@ -453,7 +461,7 @@ namespace swlb {
     }
 
     PixelLoc nextReadCenter() const {
-      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN};
+      return {readTopLeft.row + WINDOW_ROW_MARGIN - 2, readTopLeft.col + WINDOW_COL_MARGIN - 2};
     }
 
     bool windowFull() const {
@@ -461,6 +469,11 @@ namespace swlb {
       return (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
     }
 
+    bool windowAlmostFull() const {
+      int nValid = numValidEntries();      
+      return ((nValid + 2) >= ((WindowRows - 1)*NumImageCols + WindowCols));
+    }
+    
     bool nextReadInBounds() const {
       PixelLoc center = nextReadCenter();
 
@@ -475,10 +488,9 @@ namespace swlb {
 
     bool windowValid() const {
 
-      //assert(false);
-      
       return nextReadInBounds() &&
-        windowFull();
+        windowAlmostFull();
+      //windowFull();
     }
 
     // Problem: Window is initially invalid, and I want it to become valid
@@ -511,7 +523,7 @@ namespace swlb {
       cout << "Calling read" << endl;
 
       if ((rowOffset == 0) && (colOffset == 0)) {
-        //return e00;
+        return e00;
         //assert(false);
         //return 10;
       }
@@ -919,7 +931,8 @@ namespace swlb {
     
     ImageBuffer3x3<int, NumImageRows, NumImageCols> lb;
     
-    while (!lb.windowValid()) {
+    //while (!lb.windowValid()) {
+    while (!lb.windowFull()) {
       lb.write(input.read());
       input.pop();
     }
@@ -943,7 +956,7 @@ namespace swlb {
         int res = 0;
         for (int row = 0; row < NumKernelRows; row++) {
           for (int col = 0; col < NumKernelCols; col++) {
-            cout << "Calling read" << endl;
+            //cout << "Calling read" << endl;
             res += kernel(row, col)*lb.read(row - (NumKernelRows / 2), col - (NumKernelCols / 2));
           }
         }
