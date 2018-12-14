@@ -182,12 +182,7 @@ namespace swlb {
     
     void pop() {
       readInd = (readInd + 1) % LB_SIZE;
-      // If we are at the end of a row, shift to the next row
-      // if ((((readInd + (WindowCols / 2))) % WindowCols) == 0) {
-      //   readInd = (readInd + 2*(WindowCols / 2)) % LB_SIZE;
-      // } else {
-      //   readInd = (readInd + 1) % LB_SIZE;
-      // }
+
       if (readInd == writeInd) {
         empty = true;
       }
@@ -418,6 +413,11 @@ namespace swlb {
       writeInd = modInc(writeInd, LB_SIZE);
       writeAddr = increment(writeAddr);
 
+      shiftWindow();
+    }
+
+    void readShift() {
+      pop();
       shiftWindow();
     }
 
@@ -900,6 +900,9 @@ namespace swlb {
 
     // Need to have a warmup period where the register window gets shifted
     // into position?
+
+    lb.readShift();
+    lb.readShift();
 
     cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
