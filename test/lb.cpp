@@ -325,11 +325,34 @@ namespace swlb {
     }
 
     ElemType readBuf(const int i) {
-      return buf[i];
+      int ramNo = i / NumImageCols;
+      int ramAddr = i % NumImageCols;
+
+      if (ramNo == 0) {
+        return line0[ramAddr];
+      } else if (ramNo == 1) {
+        return line1[ramAddr];
+      } else if (ramNo == 2) {
+        return line2[ramAddr];
+      }
+
+      assert(false);
+      //return buf[i];
     }
 
     void writeBuf(const int i, const ElemType t) {
-      buf[i] = t;
+      int ramNo = i / NumImageCols;
+      int ramAddr = i % NumImageCols;
+
+      if (ramNo == 0) {
+        line0[ramAddr] = t;
+      } else if (ramNo == 1) {
+        line1[ramAddr] = t;
+      } else if (ramNo == 2) {
+        line2[ramAddr] = t;
+      }
+      
+      //buf[i] = t;
     }
 
     bool full() const {
@@ -341,7 +364,6 @@ namespace swlb {
 
       empty = false;
       writeBuf(writeInd, t);
-      //buf[writeInd] = t;
 
       int nextRow = writeTopLeft.row;
       int nextCol = writeTopLeft.col + 1;
@@ -423,13 +445,11 @@ namespace swlb {
 
       return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
 
-      //return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
     }
 
     void printBuffer() {
       for (int i = 0; i < LB_SIZE; i++) {
-        cout << readBuf(i) << " "; //buf[i] << " ";
-        //cout << buf[i] << " ";
+        cout << readBuf(i) << " ";
       }
     }
 
@@ -442,8 +462,6 @@ namespace swlb {
           int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
           int ind = rawInd % LB_SIZE;
           window.set(rowOffset, colOffset, readBuf(ind));
-          //window.set(rowOffset, colOffset, buf[ind]);
-
         }
 
       }
@@ -456,8 +474,7 @@ namespace swlb {
         for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
           int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
           int ind = rawInd % LB_SIZE;
-          cout << readBuf(ind) << " "; //buf[ind] << " ";
-          //cout << buf[ind] << " ";
+          cout << readBuf(ind) << " ";
         }
 
         cout << endl;
