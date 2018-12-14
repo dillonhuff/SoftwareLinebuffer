@@ -27,7 +27,11 @@ namespace swlb {
   public:
 
     Mem2D() {
-      
+      for (int i = 0; i < NumRows; i++) {
+        for (int j = 0; j < NumRows; j++) {
+          set(i, j, 0);
+        }
+      }
     }
 
     void print() {
@@ -67,6 +71,11 @@ namespace swlb {
       writeInd = 0;
       readInd = 0;
       empty = true;
+
+      for (int i = 0; i < size; i++) {
+        buf[i] = 0;
+      }
+
     }
 
     bool full() {
@@ -114,6 +123,11 @@ namespace swlb {
       writeInd = 0;
       readInd = 0;
       empty = true;
+
+      for (int i = 0; i < LB_SIZE; i++) {
+        buf[i] = 0;
+      }
+      
     }
 
     bool full() const {
@@ -913,8 +927,8 @@ namespace swlb {
     // Need to have a warmup period where the register window gets shifted
     // into position?
 
-    // lb.readShift();
-    // lb.readShift();
+    lb.readShift();
+    lb.readShift();
 
     cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
