@@ -262,6 +262,14 @@ namespace swlb {
     return inc;
   }
 
+  // Maybe the way to go is to first reduce the size of the buffer and
+  // add variables for the last 3 points in the buffer. Then move on to
+  // controlling addresses in the global buffer by using ram addresses
+  // and converting them to unified addresses?
+
+  // Or maybe the way to do it is to have 3 RAMs, one of which is small
+  // and use the buffers exactly the same way, but converting from RAM
+  // addresses?
   template<typename ElemType, int NumImageRows, int NumImageCols>
   class ImageBuffer3x3 {
   public:
@@ -282,6 +290,7 @@ namespace swlb {
 
     ElemType line0[NumImageCols];
     ElemType line1[NumImageCols];
+    ElemType line2[WINDOW_COL_MARGIN + WindowCols];
 
     ElemType e00, e01, e02;
     ElemType e10, e11, e12;
@@ -306,13 +315,21 @@ namespace swlb {
       writeInd = 0;
       readInd = 0;
 
-      writeAddr = {0, 0, 2, NumImageRows};
-      readAddr = {0, 0, 2, NumImageRows};
+      writeAddr = {0, 0, 3, {NumImageRows}};
+      readAddr = {0, 0, 3, {NumImageRows}};
       
       readTopLeft = {0, 0};
       writeTopLeft = {0, 0};
       
       empty = true;
+    }
+
+    ElemType readBuf(const int i) {
+      return buf[i];
+    }
+
+    void writeBuf(const int i, const ElemType t) {
+      buf[i] = t;
     }
 
     bool full() const {
@@ -323,7 +340,8 @@ namespace swlb {
       assert(!full());
 
       empty = false;
-      buf[writeInd] = t;
+      writeBuf(writeInd, t);
+      //buf[writeInd] = t;
 
       int nextRow = writeTopLeft.row;
       int nextCol = writeTopLeft.col + 1;
@@ -335,6 +353,7 @@ namespace swlb {
       writeTopLeft = {nextRow, nextCol};
       
       writeInd = modInc(writeInd, LB_SIZE);
+      writeAddr = increment(writeAddr);
     }
 
     int numValidEntries() const {
@@ -383,6 +402,7 @@ namespace swlb {
 
     void pop() {
       readInd = (readInd + 1) % LB_SIZE;
+      readAddr = increment(readAddr);
 
       int nextRow = readTopLeft.row;
       int nextCol = readTopLeft.col + 1;
@@ -401,12 +421,15 @@ namespace swlb {
       assert(rowOffset <= (WindowRows / 2));
       assert(colOffset <= (WindowCols / 2));
 
-      return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
+      return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
+
+      //return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
     }
 
     void printBuffer() {
       for (int i = 0; i < LB_SIZE; i++) {
-        cout << buf[i] << " ";
+        cout << readBuf(i) << " "; //buf[i] << " ";
+        //cout << buf[i] << " ";
       }
     }
 
@@ -418,7 +441,8 @@ namespace swlb {
 
           int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
           int ind = rawInd % LB_SIZE;
-          window.set(rowOffset, colOffset, buf[ind]);
+          window.set(rowOffset, colOffset, readBuf(ind));
+          //window.set(rowOffset, colOffset, buf[ind]);
 
         }
 
@@ -432,7 +456,8 @@ namespace swlb {
         for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
           int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
           int ind = rawInd % LB_SIZE;
-          cout << buf[ind] << " ";
+          cout << readBuf(ind) << " "; //buf[ind] << " ";
+          //cout << buf[ind] << " ";
         }
 
         cout << endl;
@@ -934,7 +959,6 @@ namespace swlb {
     CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
     lineBufferConv<int, 3, 3, NROWS, NCOLS>(inputBuf, kernel, lbOutput);
 
-    //vector<int> lineBufOutput;
     Mem2D<int, OUT_ROWS, OUT_COLS> lineBufOutput;
     cout << "LB output" << endl;
     for (int i = 0; i < OUT_ROWS; i++) {
@@ -973,7 +997,6 @@ namespace swlb {
     CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
     lineBufferConv3x3<int, NROWS, NCOLS>(inputBuf, kernel, lbOutput);
 
-    //vector<int> lineBufOutput;
     Mem2D<int, OUT_ROWS, OUT_COLS> lineBufOutput;
     cout << "3x3 LB output" << endl;
     for (int i = 0; i < OUT_ROWS; i++) {
