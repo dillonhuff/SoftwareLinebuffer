@@ -461,6 +461,8 @@ namespace swlb {
 
     bool windowValid() const {
 
+      //assert(false);
+      
       return nextReadInBounds() &&
         windowFull();
     }
@@ -491,6 +493,16 @@ namespace swlb {
     ElemType read(const int rowOffset, const int colOffset) {
       assert(rowOffset <= (WindowRows / 2));
       assert(colOffset <= (WindowCols / 2));
+
+      cout << "Calling read" << endl;
+
+      if ((rowOffset == 0) && (colOffset == 0)) {
+        //return e00;
+        assert(false);
+        return 10;
+      }
+
+      assert(false);
 
       return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
 
@@ -885,8 +897,8 @@ namespace swlb {
 
   template<typename ElemType, int NumImageRows, int NumImageCols>
   void lineBufferConv3x3(CircularFIFO<ElemType, NumImageRows*NumImageCols>& input,
-                      const Mem2D<ElemType, 3, 3>& kernel,
-                      CircularFIFO<ElemType, (NumImageRows - 2*((3)/2))*(NumImageCols - 2*((3)/2)) >& lbOutput) {
+                         const Mem2D<ElemType, 3, 3>& kernel,
+                         CircularFIFO<ElemType, (NumImageRows - 2*((3)/2))*(NumImageCols - 2*((3)/2)) >& lbOutput) {
 
     const int NumKernelRows = 3;
     const int NumKernelCols = 3;
