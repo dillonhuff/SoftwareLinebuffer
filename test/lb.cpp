@@ -30,6 +30,15 @@ namespace swlb {
       
     }
 
+    void print() {
+      for (int i = 0; i < NumRows; i++) {
+        for (int j = 0; j < NumCols; j++) {
+          cout << (*this)(i, j) << " ";
+        }
+        cout << endl;
+      }
+    }
+    
     int size() const {
       return NumRows*NumCols;
     }
@@ -159,10 +168,10 @@ namespace swlb {
 
     bool inEndMargin() const {
       int rc = WindowCols / 2;
-      cout << "rc = " << rc << endl;
+      //cout << "rc = " << rc << endl;
       int endMargin = NumImageCols - (WindowCols / 2);
-      cout << "End margin = " << endMargin << endl;
-      cout << "Read ind   = " << readInd << endl;
+      //cout << "End margin = " << endMargin << endl;
+      //cout << "Read ind   = " << readInd << endl;
       return (readInd > 0) && (((readInd % NumImageCols) == 0) ||
                                (readInd % NumImageCols) >= NumImageCols - (WindowCols / 2));
     }
@@ -848,32 +857,31 @@ namespace swlb {
 
     return kernel;
   }
-  
-  TEST_CASE("Using linebuffer for convolution") {
 
+  Mem2D<int, NROWS, NCOLS> exampleInput() {
     Mem2D<int, NROWS, NCOLS> input;
     //vector<int> input;
     int val = 1;
     for (int i = 0; i < NROWS; i++) {
       for (int j = 0; j < NCOLS; j++) {
-        //input.push_back(val);
         input.set(i, j, val);
         val++;
       }
     }
 
+    return input;
+  }
+
+  TEST_CASE("Using linebuffer for convolution") {
+
+    Mem2D<int, NROWS, NCOLS> input = exampleInput();
     Mem2D<int, 3, 3> kernel = exampleKernel();
 
     Mem2D<int, OUT_ROWS, OUT_COLS> correctOutput;
     bulkConv<int, KERNEL_WIDTH, KERNEL_WIDTH, NROWS, NCOLS>(input, kernel, correctOutput);
 
     cout << "Correct output" << endl;
-    for (int i = 0; i < OUT_ROWS; i++) {
-      for (int j = 0; j < OUT_COLS; j++) {
-        cout << correctOutput(i, j) << " ";
-      }
-      cout << endl;
-    }
+    correctOutput.print();
 
     CircularFIFO<int, NROWS*NCOLS> inputBuf;
     fill(inputBuf, input);
@@ -881,12 +889,14 @@ namespace swlb {
     CircularFIFO<int, OUT_ROWS*OUT_COLS> lbOutput;
     lineBufferConv<int, 3, 3, NROWS, NCOLS>(inputBuf, kernel, lbOutput);
 
-    vector<int> lineBufOutput;
+    //vector<int> lineBufOutput;
+    Mem2D<int, OUT_ROWS, OUT_COLS> lineBufOutput;
     cout << "LB output" << endl;
     for (int i = 0; i < OUT_ROWS; i++) {
       for (int j = 0; j < OUT_COLS; j++) {
         cout << lbOutput.read() << " ";
-        lineBufOutput.push_back(lbOutput.read());
+        //lineBufOutput.push_back(lbOutput.read());
+        lineBufOutput.set(i, j, lbOutput.read());
         lbOutput.pop();
 
       }
@@ -896,7 +906,7 @@ namespace swlb {
     REQUIRE(lineBufOutput.size() == correctOutput.size());
     for (int i = 0; i < OUT_ROWS; i++) {
       for (int j = 0; j < OUT_COLS; j++) {
-        REQUIRE(lineBufOutput[i*OUT_COLS + j] == correctOutput(i, j));
+        REQUIRE(lineBufOutput(i, j) == correctOutput(i, j));
       }
     }
     
