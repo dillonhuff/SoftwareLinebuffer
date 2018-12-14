@@ -262,14 +262,13 @@ namespace swlb {
     return inc;
   }
 
-  // Maybe the way to go is to first reduce the size of the buffer and
-  // add variables for the last 3 points in the buffer. Then move on to
-  // controlling addresses in the global buffer by using ram addresses
-  // and converting them to unified addresses?
-
   // Or maybe the way to do it is to have 3 RAMs, one of which is small
   // and use the buffers exactly the same way, but converting from RAM
-  // addresses?
+  // addresses? So far, this turned out to be the best way. It was easiest because
+  // it involved
+
+  // Now I can print out a plausible looking window that shifts slowly, but the
+  // window does not match 
   template<typename ElemType, int NumImageRows, int NumImageCols>
   class ImageBuffer3x3 {
   public:
