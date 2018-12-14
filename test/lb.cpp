@@ -288,6 +288,9 @@ namespace swlb {
     ElemType e20, e21, e22;
 
     ElemType buf[LB_SIZE];
+
+    RAMAddr writeAddr;
+    RAMAddr readAddr;
     
     int writeInd;
     int readInd;
@@ -303,6 +306,9 @@ namespace swlb {
       writeInd = 0;
       readInd = 0;
 
+      writeAddr = {0, 0, 2, NumImageRows};
+      readAddr = {0, 0, 2, NumImageRows};
+      
       readTopLeft = {0, 0};
       writeTopLeft = {0, 0};
       
@@ -969,7 +975,7 @@ namespace swlb {
 
     //vector<int> lineBufOutput;
     Mem2D<int, OUT_ROWS, OUT_COLS> lineBufOutput;
-    cout << "LB output" << endl;
+    cout << "3x3 LB output" << endl;
     for (int i = 0; i < OUT_ROWS; i++) {
       for (int j = 0; j < OUT_COLS; j++) {
         cout << lbOutput.read() << " ";
