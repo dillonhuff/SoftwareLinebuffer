@@ -228,6 +228,202 @@ namespace swlb {
     out << "(" << b.row << ", " << b.col << ")";
     return out;
   }
+
+  class RAMAddr {
+  public:
+    int ramNumber;
+    int indexInRAM;
+    int numRAMs;
+    int ramWidth;
+  };
+
+  RAMAddr increment(const RAMAddr addr) {
+    RAMAddr inc;
+    inc.numRAMs = addr.numRAMS;
+    inc.ramWidth = addr.ramWidth;
+    
+    int nextInd = addr.indexInRAM + 1;
+    if (nextInd == addr.ramWidth) {
+      nextInd = 0;
+      ramNumber = (addr.ramNumber + 1) % addr.numRAMs;
+    }
+
+    
+
+  }
+
+  template<typename ElemType, int NumImageRows, int NumImageCols>
+  class ImageBuffer3x3 {
+  public:
+
+    const static int WindowRows = 3;
+    const static int WindowCols = 3;
+    
+    const static int WINDOW_COL_MARGIN = (WindowCols / 2);
+    const static int WINDOW_ROW_MARGIN = (WindowRows / 2);
+
+    const static int OUTPUT_LEFT_BOUND = WINDOW_COL_MARGIN;
+    const static int OUTPUT_RIGHT_BOUND = (NumImageCols - WINDOW_COL_MARGIN) - 1;
+
+    const static int OUTPUT_TOP_BOUND = WINDOW_ROW_MARGIN;
+    const static int OUTPUT_BOTTOM_BOUND = (NumImageRows - WINDOW_ROW_MARGIN) - 1;
+
+    const static int LB_SIZE = (WindowRows - 1)*NumImageCols + WINDOW_COL_MARGIN + WindowCols;
+
+    ElemType line0[NumImageCols];
+    ElemType line1[NumImageCols];
+
+    ElemType e00, e01, e02;
+    ElemType e10, e11, e12;
+    ElemType e20, e21, e22;
+
+    ElemType buf[LB_SIZE];
+    
+    int writeInd;
+    int readInd;
+
+    PixelLoc readTopLeft;
+    PixelLoc writeTopLeft;
+
+    bool empty;
+
+  public:
+
+    ImageBuffer3x3() {
+      writeInd = 0;
+      readInd = 0;
+
+      readTopLeft = {0, 0};
+      writeTopLeft = {0, 0};
+      
+      empty = true;
+    }
+
+    bool full() const {
+      return !empty && (writeInd == readInd);
+    }
+
+    void write(ElemType t) {
+      assert(!full());
+
+      empty = false;
+      buf[writeInd] = t;
+
+      int nextRow = writeTopLeft.row;
+      int nextCol = writeTopLeft.col + 1;
+      if (nextCol == NumImageCols) {
+        nextCol = 0;
+        nextRow = nextRow + 1;
+      }
+
+      writeTopLeft = {nextRow, nextCol};
+      
+      writeInd = modInc(writeInd, LB_SIZE);
+    }
+
+    int numValidEntries() const {
+      if (empty) {
+        return 0;
+      }
+
+      if (readInd < writeInd) {
+        return writeInd - readInd;
+      }
+
+      if (readInd == writeInd) {
+        return LB_SIZE;
+      }
+
+      // readInd > writeInd
+      return (LB_SIZE - readInd) + writeInd;
+    }
+
+    PixelLoc nextReadCenter() const {
+      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN};
+    }
+
+    bool windowFull() const {
+      int nValid = numValidEntries();      
+      return (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+    }
+
+    bool nextReadInBounds() const {
+      PixelLoc center = nextReadCenter();
+
+      bool inBounds =
+        (OUTPUT_LEFT_BOUND <= center.col) &&
+        (center.col <= OUTPUT_RIGHT_BOUND) &&
+        (OUTPUT_TOP_BOUND <= center.row) &&
+        (center.row <= OUTPUT_BOTTOM_BOUND);
+
+      return inBounds;
+    }
+
+    bool windowValid() const {
+
+      return nextReadInBounds() &&
+        windowFull();
+    }
+
+    void pop() {
+      readInd = (readInd + 1) % LB_SIZE;
+
+      int nextRow = readTopLeft.row;
+      int nextCol = readTopLeft.col + 1;
+      if (nextCol == NumImageCols) {
+        nextCol = 0;
+        nextRow = nextRow + 1;
+      }
+      readTopLeft = {nextRow, nextCol};
+
+      if (readInd == readInd) {
+        empty = true;
+      }
+    }
+
+    ElemType read(const int rowOffset, const int colOffset) {
+      assert(rowOffset <= (WindowRows / 2));
+      assert(colOffset <= (WindowCols / 2));
+
+      return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
+    }
+
+    void printBuffer() {
+      for (int i = 0; i < LB_SIZE; i++) {
+        cout << buf[i] << " ";
+      }
+    }
+
+    Mem2D<ElemType, WindowRows, WindowCols>
+    getWindow() const {
+      Mem2D<ElemType, WindowRows, WindowCols> window;      
+      for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
+        for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
+
+          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+          int ind = rawInd % LB_SIZE;
+          window.set(rowOffset, colOffset, buf[ind]);
+
+        }
+
+      }
+
+      return window;
+    }
+
+    void printWindow() {
+      for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
+        for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
+          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+          int ind = rawInd % LB_SIZE;
+          cout << buf[ind] << " ";
+        }
+
+        cout << endl;
+      }
+    }
+    
+  };
   
   template<typename ElemType, int WindowRows, int WindowCols, int NumImageRows, int NumImageCols>
   class ImageBuffer {
@@ -266,9 +462,6 @@ namespace swlb {
     }
 
     bool full() const {
-      // cout << "writeInd = " << writeInd << endl;
-      // cout << "readInd  = " << readInd << endl;
-      // cout << "LB_SIZE  = " << LB_SIZE << endl;
       return !empty && (writeInd == readInd);
     }
 
