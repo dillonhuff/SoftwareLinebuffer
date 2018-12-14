@@ -296,8 +296,6 @@ namespace swlb {
     ElemType e10, e11, e12;
     ElemType e20, e21, e22;
 
-    ElemType buf[LB_SIZE];
-
     RAMAddr writeAddr;
     RAMAddr readAddr;
     
@@ -324,6 +322,30 @@ namespace swlb {
       empty = true;
     }
 
+    void printRegisterWindow() {
+      cout << e00 << " " << e01 << " " << e02 << endl;
+      cout << e10 << " " << e11 << " " << e12 << endl;
+      cout << e20 << " " << e21 << " " << e22 << endl;
+    }
+
+    void shiftWindow() {
+      e00 = e01;
+      e01 = e02;
+      e02 = readBuf(readInd);
+
+      e10 = e11;
+      e11 = e12;
+      e12 = readBuf((readInd + NumImageCols) % LB_SIZE);
+
+
+      e20 = e21;
+      e21 = e22;
+      e22 = readBuf((readInd + 2*NumImageCols) % LB_SIZE);
+
+      cout << "--------- Register window" << endl;
+      printRegisterWindow();
+    }
+
     ElemType readBuf(const int i) {
       int ramNo = i / NumImageCols;
       int ramAddr = i % NumImageCols;
@@ -337,7 +359,6 @@ namespace swlb {
       }
 
       assert(false);
-      //return buf[i];
     }
 
     void writeBuf(const int i, const ElemType t) {
@@ -351,8 +372,6 @@ namespace swlb {
       } else if (ramNo == 2) {
         line2[ramAddr] = t;
       }
-      
-      //buf[i] = t;
     }
 
     bool full() const {
@@ -422,7 +441,13 @@ namespace swlb {
         windowFull();
     }
 
+    // Problem: Window is initially invalid, and I want it to become valid
+    // before the first pop, but I dont want it to start shifting continuously until
+    // I get in to the main loop. Maybe have a delay between filling and starting
+    // to shift the window?
     void pop() {
+      shiftWindow();
+      
       readInd = (readInd + 1) % LB_SIZE;
       readAddr = increment(readAddr);
 
