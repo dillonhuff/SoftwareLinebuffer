@@ -268,7 +268,12 @@ namespace swlb {
   // it involved
 
   // Now I can print out a plausible looking window that shifts slowly, but the
-  // window does not match 
+  // register window does not match the computed window in the test case because
+  // there is a delay on the filling of the window. The window is not getting filled
+  // until popping begins, but the window is supposed to be ready by the time
+  // the first call to pop happens. Maybe we should actually shift the window
+  // during writes and read the next values of each row register from the write
+  // pointer?
   template<typename ElemType, int NumImageRows, int NumImageCols>
   class ImageBuffer3x3 {
   public:
@@ -345,6 +350,24 @@ namespace swlb {
       printRegisterWindow();
     }
 
+    void shiftWindowWrite() {
+      e00 = e01;
+      e01 = e02;
+      e02 = readBuf(writeInd);
+
+      e10 = e11;
+      e11 = e12;
+      e12 = readBuf(abs((writeInd + NumImageCols) % LB_SIZE));
+
+
+      e20 = e21;
+      e21 = e22;
+      e22 = readBuf(abs((writeInd + 2*NumImageCols) % LB_SIZE));
+
+      // cout << "--------- Register window" << endl;
+      // printRegisterWindow();
+    }
+    
     ElemType readBuf(const int i) {
       int ramNo = i / NumImageCols;
       int ramAddr = i % NumImageCols;
@@ -394,6 +417,8 @@ namespace swlb {
       
       writeInd = modInc(writeInd, LB_SIZE);
       writeAddr = increment(writeAddr);
+
+      shiftWindowWrite();
     }
 
     int numValidEntries() const {
@@ -445,7 +470,7 @@ namespace swlb {
     // I get in to the main loop. Maybe have a delay between filling and starting
     // to shift the window?
     void pop() {
-      shiftWindow();
+      //shiftWindow();
       
       readInd = (readInd + 1) % LB_SIZE;
       readAddr = increment(readAddr);
@@ -873,6 +898,8 @@ namespace swlb {
       input.pop();
     }
 
+    cout << "Register window" << endl;
+    lb.printRegisterWindow();
     while (true) {
 
       if (lb.windowValid()) {
