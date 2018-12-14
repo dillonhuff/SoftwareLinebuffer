@@ -522,13 +522,37 @@ namespace swlb {
 
       cout << "Calling read" << endl;
 
-      if ((rowOffset == 0) && (colOffset == 0)) {
+      if ((rowOffset == -1) && (colOffset == -1)) {
         return e00;
-        //assert(false);
-        //return 10;
+      }
+      if ((rowOffset == -1) && (colOffset == 0)) {
+        return e01;
+      }
+      if ((rowOffset == -1) && (colOffset == 1)) {
+        return e02;
+      }
+      
+      if ((rowOffset == 0) && (colOffset == -1)) {
+        return e10;
+      }
+      if ((rowOffset == 0) && (colOffset == 0)) {
+        return e11;
+      }
+      if ((rowOffset == 0) && (colOffset == 1)) {
+        return e12;
       }
 
-      //assert(false);
+      if ((rowOffset == 1) && (colOffset == -1)) {
+        return e20;
+      }
+      if ((rowOffset == 1) && (colOffset == 0)) {
+        return e21;
+      }
+      if ((rowOffset == 1) && (colOffset == 1)) {
+        return e22;
+      }
+
+      assert(false);
 
       return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
 
