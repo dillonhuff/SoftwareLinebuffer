@@ -239,17 +239,18 @@ namespace swlb {
 
   RAMAddr increment(const RAMAddr addr) {
     RAMAddr inc;
-    inc.numRAMs = addr.numRAMS;
+    inc.numRAMs = addr.numRAMs;
     inc.ramWidth = addr.ramWidth;
     
     int nextInd = addr.indexInRAM + 1;
     if (nextInd == addr.ramWidth) {
       nextInd = 0;
-      ramNumber = (addr.ramNumber + 1) % addr.numRAMs;
+      inc.ramNumber = (addr.ramNumber + 1) % addr.numRAMs;
     }
 
-    
+    inc.indexInRAM = nextInd;
 
+    return inc;
   }
 
   template<typename ElemType, int NumImageRows, int NumImageCols>
@@ -836,6 +837,17 @@ namespace swlb {
       }
     }
   }
+
+  Mem2D<int, 3, 3> exampleKernel() {
+    Mem2D<int, 3, 3> kernel;
+    for (int i = 0; i < KERNEL_WIDTH; i++) {
+      for (int j = 0; j < KERNEL_WIDTH; j++) {
+        kernel.set(i, j, i + j);
+      }
+    }
+
+    return kernel;
+  }
   
   TEST_CASE("Using linebuffer for convolution") {
 
@@ -850,12 +862,7 @@ namespace swlb {
       }
     }
 
-    Mem2D<int, 3, 3> kernel;
-    for (int i = 0; i < KERNEL_WIDTH; i++) {
-      for (int j = 0; j < KERNEL_WIDTH; j++) {
-        kernel.set(i, j, i + j);
-      }
-    }
+    Mem2D<int, 3, 3> kernel = exampleKernel();
 
     Mem2D<int, OUT_ROWS, OUT_COLS> correctOutput;
     bulkConv<int, KERNEL_WIDTH, KERNEL_WIDTH, NROWS, NCOLS>(input, kernel, correctOutput);
