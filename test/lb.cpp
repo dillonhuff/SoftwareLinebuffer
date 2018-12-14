@@ -418,7 +418,7 @@ namespace swlb {
       writeInd = modInc(writeInd, LB_SIZE);
       writeAddr = increment(writeAddr);
 
-      shiftWindowWrite();
+      shiftWindow();
     }
 
     int numValidEntries() const {
@@ -898,7 +898,10 @@ namespace swlb {
       input.pop();
     }
 
-    cout << "Register window" << endl;
+    // Need to have a warmup period where the register window gets shifted
+    // into position?
+
+    cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
     while (true) {
 
