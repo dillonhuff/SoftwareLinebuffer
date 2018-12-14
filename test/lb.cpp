@@ -461,7 +461,7 @@ namespace swlb {
     }
 
     PixelLoc nextReadCenter() const {
-      return {readTopLeft.row + WINDOW_ROW_MARGIN - 2, readTopLeft.col + WINDOW_COL_MARGIN - 2};
+      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN - 2};
     }
 
     bool windowFull() const {
