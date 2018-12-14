@@ -920,14 +920,20 @@ namespace swlb {
     lb.printRegisterWindow();
     while (true) {
 
+      cout << "Entering loop" << endl;
+
       if (lb.windowValid()) {
+        cout << "Window valid" << endl;
+        
         int res = 0;
         for (int row = 0; row < NumKernelRows; row++) {
           for (int col = 0; col < NumKernelCols; col++) {
+            cout << "Calling read" << endl;
             res += kernel(row, col)*lb.read(row - (NumKernelRows / 2), col - (NumKernelCols / 2));
           }
         }
 
+        cout << "Writing to lbOutput" << endl;
         lbOutput.write(res);
       }
 
