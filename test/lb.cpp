@@ -498,11 +498,11 @@ namespace swlb {
 
       if ((rowOffset == 0) && (colOffset == 0)) {
         //return e00;
-        assert(false);
-        return 10;
+        //assert(false);
+        //return 10;
       }
 
-      assert(false);
+      //assert(false);
 
       return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
 
@@ -913,11 +913,12 @@ namespace swlb {
     // Need to have a warmup period where the register window gets shifted
     // into position?
 
-    lb.readShift();
-    lb.readShift();
+    // lb.readShift();
+    // lb.readShift();
 
     cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
+
     while (true) {
 
       cout << "Entering loop" << endl;
