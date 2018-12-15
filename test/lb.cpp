@@ -271,26 +271,6 @@ namespace swlb {
     return inc;
   }
 
-  // Or maybe the way to do it is to have 3 RAMs, one of which is small
-  // and use the buffers exactly the same way, but converting from RAM
-  // addresses? So far, this turned out to be the best way. It was easiest because
-  // it involved
-
-  // Now I can print out a plausible looking window that shifts slowly, but the
-  // register window does not match the computed window in the test case because
-  // there is a delay on the filling of the window. The window is not getting filled
-  // until popping begins, but the window is supposed to be ready by the time
-  // the first call to pop happens. Maybe we should actually shift the window
-  // during writes and read the next values of each row register from the write
-  // pointer?
-
-  // Now there is a new issue: windowValid becomes invalid if the read pointer
-  // gets incremented during the pops used to shift the register window in to
-  // its correct place. The pop reduces the distance between read and write addresses
-  // which reduces the number of elements in the buffer.
-
-  // I want to be able to stop loading elements (or start shifting the read
-  // pointer) during 
   template<typename ElemType, int NumImageRows, int NumImageCols>
   class ImageBuffer3x3 {
   public:
@@ -317,9 +297,6 @@ namespace swlb {
     ElemType e10, e11, e12;
     ElemType e20, e21, e22;
 
-    RAMAddr writeAddr;
-    RAMAddr readAddr;
-    
     int writeInd;
     int readInd;
 
@@ -334,9 +311,6 @@ namespace swlb {
       writeInd = 0;
       readInd = 0;
 
-      writeAddr = {0, 0, 3, {NumImageRows}};
-      readAddr = {0, 0, 3, {NumImageRows}};
-      
       readTopLeft = {0, 0};
       writeTopLeft = {0, 0};
       
@@ -415,7 +389,6 @@ namespace swlb {
       writeTopLeft = {nextRow, nextCol};
       
       writeInd = modInc(writeInd, LB_SIZE);
-      writeAddr = increment(writeAddr);
 
       shiftWindow();
     }
@@ -477,7 +450,6 @@ namespace swlb {
 
       return nextReadInBounds() &&
         windowAlmostFull();
-      //windowFull();
     }
 
     // Problem: Window is initially invalid, and I want it to become valid
@@ -487,8 +459,6 @@ namespace swlb {
     void pop() {
       
       readInd = (readInd + 1) % LB_SIZE;
-      readAddr = increment(readAddr);
-
       int nextRow = readTopLeft.row;
       int nextCol = readTopLeft.col + 1;
       if (nextCol == NumImageCols) {
