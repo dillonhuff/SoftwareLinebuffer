@@ -503,7 +503,6 @@ namespace swlb {
     // I get in to the main loop. Maybe have a delay between filling and starting
     // to shift the window?
     void pop() {
-      //shiftWindow();
       
       readInd = (readInd + 1) % LB_SIZE;
       readAddr = increment(readAddr);
