@@ -632,11 +632,11 @@ namespace swlb {
 
     assert(lb.windowValid());
 
-    cout << "Next read center = " << lb.nextReadCenter() << endl;
+    //cout << "Next read center = " << lb.nextReadCenter() << endl;
     
     assert(lb.nextReadCenter() == PixelLoc(1, 1));
 
-    cout << "Register window on first valid" << endl;
+    //cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
 
     while (true) {
@@ -652,7 +652,7 @@ namespace swlb {
           }
         }
 
-        cout << "Writing to " << res << " to lbOutput" << endl;
+        //cout << "Writing to " << res << " to lbOutput" << endl;
         lbOutput.write(res);
       }
 
