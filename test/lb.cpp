@@ -366,24 +366,6 @@ namespace swlb {
       cout << "--------- Register window" << endl;
       printRegisterWindow();
     }
-
-    void shiftWindowWrite() {
-      e00 = e01;
-      e01 = e02;
-      e02 = readBuf(writeInd);
-
-      e10 = e11;
-      e11 = e12;
-      e12 = readBuf(abs((writeInd + NumImageCols) % LB_SIZE));
-
-
-      e20 = e21;
-      e21 = e22;
-      e22 = readBuf(abs((writeInd + 2*NumImageCols) % LB_SIZE));
-
-      // cout << "--------- Register window" << endl;
-      // printRegisterWindow();
-    }
     
     ElemType readBuf(const int i) {
       int ramNo = i / NumImageCols;
@@ -557,8 +539,6 @@ namespace swlb {
       }
 
       assert(false);
-
-      return readBuf((readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE);
 
     }
 
