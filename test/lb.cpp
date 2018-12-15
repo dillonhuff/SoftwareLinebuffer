@@ -138,36 +138,36 @@ namespace swlb {
     REQUIRE(cb.read() == 13);
   }
 
-  TEST_CASE("3 x 3 linebuffer") {
+  // TEST_CASE("3 x 3 linebuffer") {
 
-    LineBuffer<int, 3, 3, 10> lb;
+  //   LineBuffer<int, 3, 3, 10> lb;
 
-    int val = 1;
-    while (!lb.full()) {
-      lb.write(val);
-      val++;
-    }
+  //   int val = 1;
+  //   while (!lb.full()) {
+  //     lb.write(val);
+  //     val++;
+  //   }
 
-    cout << "Linebuffer window" << endl;
-    lb.printWindow();
+  //   cout << "Linebuffer window" << endl;
+  //   lb.printWindow();
 
-    lb.pop();
+  //   lb.pop();
 
-    lb.write(val);
-    val++;
+  //   lb.write(val);
+  //   val++;
     
-    cout << "Linebuffer window" << endl;
-    lb.printWindow();
+  //   cout << "Linebuffer window" << endl;
+  //   lb.printWindow();
 
-    lb.pop();
+  //   lb.pop();
 
-    lb.write(val);
-    val++;
+  //   lb.write(val);
+  //   val++;
 
-    cout << "Linebuffer window" << endl;
-    lb.printWindow();
+  //   cout << "Linebuffer window" << endl;
+  //   lb.printWindow();
     
-  }
+  // }
 
 
   const int KERNEL_WIDTH = 3;
@@ -294,20 +294,20 @@ namespace swlb {
     }
   }
   
-  TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
-    LineBuffer<int, 3, 3, 10> lb;
-    for (int i = 0; i < 23; i++) {
-      lb.write(i);
-    }
+  // TEST_CASE("After 23 data loaded, 9 data read linebuffer is at EOL") {
+  //   LineBuffer<int, 3, 3, 10> lb;
+  //   for (int i = 0; i < 23; i++) {
+  //     lb.write(i);
+  //   }
 
-    for (int i = 0; i < 9; i++) {
-      cout << lb.read(0, 0) << endl;
-      REQUIRE(!lb.inEndMargin());
-      lb.pop();
-    }
+  //   for (int i = 0; i < 9; i++) {
+  //     cout << lb.read(0, 0) << endl;
+  //     REQUIRE(!lb.inEndMargin());
+  //     lb.pop();
+  //   }
     
-    REQUIRE(lb.inEndMargin());
-  }
+  //   REQUIRE(lb.inEndMargin());
+  // }
 
   template<typename ElemType, int NumRows, int NumCols>
   void fill(CircularFIFO<ElemType, NumRows*NumCols>& buf,

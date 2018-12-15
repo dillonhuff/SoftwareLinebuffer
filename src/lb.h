@@ -106,127 +106,127 @@ namespace swlb {
     }
   };
 
-  template<typename ElemType, int WindowRows, int WindowCols, int NumImageCols>
-  class LineBuffer {
+  // template<typename ElemType, int WindowRows, int WindowCols, int NumImageCols>
+  // class LineBuffer {
 
-    const static int LB_SIZE = (WindowRows - 1)*NumImageCols + (WindowCols / 2) + WindowCols;
+  //   const static int LB_SIZE = (WindowRows - 1)*NumImageCols + (WindowCols / 2) + WindowCols;
     
-    ElemType buf[LB_SIZE];
-    int writeInd;
-    int readInd;
-    bool empty;
+  //   ElemType buf[LB_SIZE];
+  //   int writeInd;
+  //   int readInd;
+  //   bool empty;
 
-  public:
+  // public:
 
-    LineBuffer() {
-      writeInd = 0;
-      readInd = 0;
-      empty = true;
+  //   LineBuffer() {
+  //     writeInd = 0;
+  //     readInd = 0;
+  //     empty = true;
 
-      for (int i = 0; i < LB_SIZE; i++) {
-        buf[i] = 0;
-      }
+  //     for (int i = 0; i < LB_SIZE; i++) {
+  //       buf[i] = 0;
+  //     }
       
-    }
+  //   }
 
-    bool full() const {
-      // cout << "writeInd = " << writeInd << endl;
-      // cout << "readInd  = " << readInd << endl;
-      // cout << "LB_SIZE  = " << LB_SIZE << endl;
-      return !empty && (writeInd == readInd);
-    }
+  //   bool full() const {
+  //     // cout << "writeInd = " << writeInd << endl;
+  //     // cout << "readInd  = " << readInd << endl;
+  //     // cout << "LB_SIZE  = " << LB_SIZE << endl;
+  //     return !empty && (writeInd == readInd);
+  //   }
 
-    void write(ElemType t) {
-      assert(!full());
+  //   void write(ElemType t) {
+  //     assert(!full());
 
-      empty = false;
-      buf[writeInd] = t;
+  //     empty = false;
+  //     buf[writeInd] = t;
 
-      writeInd = modInc(writeInd, LB_SIZE);
-    }
+  //     writeInd = modInc(writeInd, LB_SIZE);
+  //   }
 
-    bool eol() const {
-      return ((((readInd + (WindowCols / 2))) % WindowCols) == 0);
-    }
+  //   bool eol() const {
+  //     return ((((readInd + (WindowCols / 2))) % WindowCols) == 0);
+  //   }
 
-    bool inStartMargin() const {
-      return (readInd % NumImageCols) < (WindowCols / 2);
-    }
+  //   bool inStartMargin() const {
+  //     return (readInd % NumImageCols) < (WindowCols / 2);
+  //   }
 
-    int numValidEntries() const {
-      if (empty) {
-        return 0;
-      }
+  //   int numValidEntries() const {
+  //     if (empty) {
+  //       return 0;
+  //     }
 
-      if (readInd < writeInd) {
-        return writeInd - readInd;
-      }
+  //     if (readInd < writeInd) {
+  //       return writeInd - readInd;
+  //     }
 
-      if (readInd == writeInd) {
-        return LB_SIZE;
-      }
+  //     if (readInd == writeInd) {
+  //       return LB_SIZE;
+  //     }
 
-      // readInd > writeInd
-      return (LB_SIZE - readInd) + writeInd;
-    }
+  //     // readInd > writeInd
+  //     return (LB_SIZE - readInd) + writeInd;
+  //   }
 
-    std::pair<int, int> windowStart() {
+  //   std::pair<int, int> windowStart() {
       
-    }
+  //   }
 
-    bool windowValid() const {
-      int nValid = numValidEntries();
-      return !inEndMargin() && !inStartMargin() && (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
-    }
+  //   bool windowValid() const {
+  //     int nValid = numValidEntries();
+  //     return !inEndMargin() && !inStartMargin() && (nValid >= ((WindowRows - 1)*NumImageCols + WindowCols));
+  //   }
 
-    bool inEndMargin() const {
-      //int rc = WindowCols / 2;
-      //cout << "rc = " << rc << endl;
-      //int endMargin = NumImageCols - (WindowCols / 2);
-      //cout << "End margin = " << endMargin << endl;
-      //cout << "Read ind   = " << readInd << endl;
-      return (readInd > 0) && (((readInd % NumImageCols) == 0) ||
-                               (readInd % NumImageCols) >= NumImageCols - (WindowCols / 2));
-    }
+  //   bool inEndMargin() const {
+  //     //int rc = WindowCols / 2;
+  //     //cout << "rc = " << rc << endl;
+  //     //int endMargin = NumImageCols - (WindowCols / 2);
+  //     //cout << "End margin = " << endMargin << endl;
+  //     //cout << "Read ind   = " << readInd << endl;
+  //     return (readInd > 0) && (((readInd % NumImageCols) == 0) ||
+  //                              (readInd % NumImageCols) >= NumImageCols - (WindowCols / 2));
+  //   }
 
-    bool sol() const {
-      return ((readInd % WindowCols) == 0);
-    }
+  //   bool sol() const {
+  //     return ((readInd % WindowCols) == 0);
+  //   }
     
-    void pop() {
-      readInd = (readInd + 1) % LB_SIZE;
+  //   void pop() {
+  //     readInd = (readInd + 1) % LB_SIZE;
 
-      if (readInd == writeInd) {
-        empty = true;
-      }
-    }
+  //     if (readInd == writeInd) {
+  //       empty = true;
+  //     }
+  //   }
 
-    ElemType read(const int rowOffset, const int colOffset) {
-      assert(rowOffset <= (WindowRows / 2));
-      assert(colOffset <= (WindowCols / 2));
+  //   ElemType read(const int rowOffset, const int colOffset) {
+  //     assert(rowOffset <= (WindowRows / 2));
+  //     assert(colOffset <= (WindowCols / 2));
 
-      return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
-    }
+  //     return buf[(readInd + NumImageCols*(rowOffset + (WindowRows / 2)) + (colOffset + (WindowCols / 2))) % LB_SIZE];
+  //   }
 
-    void printBuffer() {
-      for (int i = 0; i < LB_SIZE; i++) {
-        cout << buf[i] << " ";
-      }
-    }
+  //   void printBuffer() {
+  //     for (int i = 0; i < LB_SIZE; i++) {
+  //       cout << buf[i] << " ";
+  //     }
+  //   }
 
-    void printWindow() {
-      for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
-        for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
-          int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
-          int ind = rawInd % LB_SIZE;
-          cout << buf[ind] << " ";
-        }
+  //   void printWindow() {
+  //     for (int rowOffset = 0; rowOffset < WindowRows; rowOffset++) {
+  //       for (int colOffset = 0; colOffset < WindowCols; colOffset++) {
+  //         int rawInd = (readInd + NumImageCols*rowOffset + colOffset);
+  //         int ind = rawInd % LB_SIZE;
+  //         cout << buf[ind] << " ";
+  //       }
 
-        cout << endl;
-      }
-    }
+  //       cout << endl;
+  //     }
+  //   }
     
-  };
+  // };
 
   class PixelLoc {
   public:
