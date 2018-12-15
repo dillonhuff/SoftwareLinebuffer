@@ -445,6 +445,7 @@ namespace swlb {
 
     int numValidEntries() const {
       if (empty) {
+        cout << "Empty" << endl;
         return 0;
       }
 
@@ -471,7 +472,11 @@ namespace swlb {
 
     bool windowAlmostFull() const {
       int nValid = numValidEntries();      
-      return ((nValid + 2) >= ((WindowRows - 1)*NumImageCols + WindowCols));
+      bool almostFull= ((nValid + 2) >= ((WindowRows - 1)*NumImageCols + WindowCols));
+
+      cout << "nValid      = " << nValid << endl;
+      cout << "almost full = " << almostFull << endl;
+      return almostFull;
     }
     
     bool nextReadInBounds() const {
@@ -511,7 +516,7 @@ namespace swlb {
       }
       readTopLeft = {nextRow, nextCol};
 
-      if (readInd == readInd) {
+      if (readInd == writeInd) {
         empty = true;
       }
     }
