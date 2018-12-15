@@ -461,7 +461,7 @@ namespace swlb {
     }
 
     PixelLoc nextReadCenter() const {
-      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN - 2};
+      return {readTopLeft.row + WINDOW_ROW_MARGIN - 2, readTopLeft.col + WINDOW_COL_MARGIN - 2};
     }
 
     bool windowFull() const {
@@ -520,7 +520,7 @@ namespace swlb {
       assert(rowOffset <= (WindowRows / 2));
       assert(colOffset <= (WindowCols / 2));
 
-      cout << "Calling read" << endl;
+      //cout << "Calling read" << endl;
 
       if ((rowOffset == -1) && (colOffset == -1)) {
         return e00;
@@ -972,10 +972,8 @@ namespace swlb {
 
     while (true) {
 
-      cout << "Entering loop" << endl;
-
       if (lb.windowValid()) {
-        cout << "Window valid" << endl;
+        //cout << "Window valid" << endl;
         
         int res = 0;
         for (int row = 0; row < NumKernelRows; row++) {
