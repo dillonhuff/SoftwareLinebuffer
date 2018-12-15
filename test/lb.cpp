@@ -461,7 +461,7 @@ namespace swlb {
     }
 
     PixelLoc nextReadCenter() const {
-      return {readTopLeft.row + WINDOW_ROW_MARGIN - 2, readTopLeft.col + WINDOW_COL_MARGIN - 2};
+      return {readTopLeft.row + WINDOW_ROW_MARGIN, readTopLeft.col + WINDOW_COL_MARGIN - 2};
     }
 
     bool windowFull() const {
@@ -967,6 +967,12 @@ namespace swlb {
     lb.readShift();
     lb.readShift();
 
+    assert(lb.windowValid());
+
+    cout << "Next read center = " << lb.nextReadCenter() << endl;
+    
+    assert(lb.nextReadCenter() == PixelLoc(1, 1));
+
     cout << "Register window on first valid" << endl;
     lb.printRegisterWindow();
 
@@ -983,7 +989,7 @@ namespace swlb {
           }
         }
 
-        cout << "Writing to lbOutput" << endl;
+        cout << "Writing to " << res << " to lbOutput" << endl;
         lbOutput.write(res);
       }
 
